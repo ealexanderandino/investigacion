@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENA - Proyecto de Investigación & Mapa de Procesos SENOVA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sena: {
+                            green: '#39A900',
+                            darkGreen: '#00324D',
+                            lightGreen: '#CEEAD6',
+                            accent: '#FC7300',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Atkinson Hyperlegible', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Accesibilidad e Interfaz de Alto Contraste */
+        *:focus-visible {
+            outline: 4px solid #FACC15 !important;
+            outline-offset: 3px !important;
+        }
+
+        .contrast-dark {
+            background-color: #090D16;
+            color: #F8FAFC;
+        }
+
+        .contrast-yellow {
+            background-color: #000000;
+            color: #FFFF00;
+        }
+        .contrast-yellow .bg-card-theme {
+            background-color: #121212 !important;
+            border: 2px solid #FFFF00 !important;
+        }
+        .contrast-yellow button, .contrast-yellow .btn-theme {
+            border: 2px solid #FFFF00 !important;
+            color: #FFFF00 !important;
+            background-color: #000000 !important;
+        }
+        .contrast-yellow button:hover {
+            background-color: #FFFF00 !important;
+            color: #000000 !important;
+        }
+
+        .contrast-light {
+            background-color: #F1F5F9;
+            color: #0F172A;
+        }
+
+        /* Estilos Roadmap.sh Neobrutalismo Limpio */
+        .roadmap-canvas {
+            background-image: radial-gradient(#94a3b8 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .contrast-dark .roadmap-canvas {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+        }
+        .contrast-yellow .roadmap-canvas {
+            background-image: radial-gradient(#eab308 1px, transparent 1px);
+        }
+
+        .rm-node {
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+            box-shadow: 4px 4px 0px #0f172a;
+        }
+        .rm-node:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #0f172a;
+        }
+        .rm-node:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #0f172a;
+        }
+        .contrast-dark .rm-node {
+            box-shadow: 4px 4px 0px #000000;
+        }
+        .contrast-dark .rm-node:hover {
+            box-shadow: 6px 6px 0px #39A900;
+        }
+        .contrast-yellow .rm-node {
+            border: 2px solid #FFFF00 !important;
+            box-shadow: 4px 4px 0px #FFFF00 !important;
+        }
+
+        .rm-yellow {
+            background-color: #FACC15;
+            color: #0f172a;
+            border: 2.5px solid #0f172a;
+        }
+        .rm-beige {
+            background-color: #FEF08A;
+            color: #0f172a;
+            border: 2px solid #0f172a;
+        }
+        .rm-dark {
+            background-color: #334155;
+            color: #F8FAFC;
+            border: 2px solid #0f172a;
+        }
+        .rm-orange-badge {
+            background-color: #F97316;
+            color: #0f172a;
+            border: 2px solid #0f172a;
+        }
+
+        .text-scale-1 { font-size: 100%; }
+        .text-scale-2 { font-size: 115%; }
+        .text-scale-3 { font-size: 130%; }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #39A900;
+            border-radius: 5px;
+        }
+        
+        .glow-box {
+            box-shadow: 0 0 20px rgba(57, 169, 0, 0.25);
+        }
+    </style>
+</head>
+<body class="font-sans min-h-screen transition-all duration-300 antialiased selection:bg-yellow-400 selection:text-black">
+
+    <div id="app" :class="[themeClass, fontScaleClass]" class="min-h-screen flex flex-col">
+        
+        <!-- HEADER DE ACCESIBILIDAD Y CONTROL -->
+        <header class="sticky top-0 z-50 border-b-4 border-sena-green shadow-xl bg-slate-900 text-white p-4">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+                
+                <!-- Logo SENA & Titular -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-sena-green text-slate-900 font-extrabold text-2xl p-3 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid font-bold fa-microscope text-3xl" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-wide flex items-center gap-2">
+                            SENA - INVESTIGACIÓN Y GESTIÓN
+                            <span class="text-xs bg-sena-accent text-slate-950 font-bold px-2 py-1 rounded-md uppercase">Centro Textil y GI</span>
+                        </h1>
+                        <p class="text-xs sm:text-sm text-slate-300">Formulación de Proyecto, Mapa de Procesos SENOVA y Aseguramiento de Calidad</p>
+                    </div>
+                </div>
+
+                <!-- Barra de Accesibilidad Visual -->
+                <div class="flex flex-wrap items-center gap-2 bg-slate-800 p-2 rounded-xl border-2 border-slate-700" role="region" aria-label="Controles de Accesibilidad Visual">
+                    <span class="text-xs text-yellow-400 font-bold px-1"><i class="fa-solid fa-eye mr-1"></i> ACCESIBILIDAD:</span>
+                    <div class="flex bg-slate-950 rounded-lg p-1 border border-slate-700">
+                        <button @click="setFontScale(1)" :class="fontScale === 1 ? 'bg-sena-green text-slate-950 font-extrabold' : 'text-white'" class="px-2 py-1 text-xs rounded hover:bg-slate-700 transition" title="Texto Normal (100%)">A</button>
+                        <button @click="setFontScale(2)" :class="fontScale === 2 ? 'bg-sena-green text-slate-950 font-extrabold' : 'text-white'" class="px-2 py-1 text-sm rounded hover:bg-slate-700 transition" title="Texto Mediano (115%)">A+</button>
+                        <button @click="setFontScale(3)" :class="fontScale === 3 ? 'bg-sena-green text-slate-950 font-extrabold' : 'text-white'" class="px-2 py-1 text-base rounded hover:bg-slate-700 transition font-bold" title="Texto Grande (130%)">A++</button>
+                    </div>
+
+                    <div class="flex bg-slate-950 rounded-lg p-1 border border-slate-700 gap-1">
+                        <button @click="setTheme('dark')" :class="theme === 'dark' ? 'ring-2 ring-sena-green' : ''" class="px-2 py-1 text-xs rounded bg-slate-900 text-white font-bold hover:opacity-80">
+                            Oscuro
+                        </button>
+                        <button @click="setTheme('yellow')" :class="theme === 'yellow' ? 'ring-2 ring-yellow-400' : ''" class="px-2 py-1 text-xs rounded bg-black text-yellow-400 font-extrabold border border-yellow-400 hover:opacity-80">
+                            Alto Contraste
+                        </button>
+                        <button @click="setTheme('light')" :class="theme === 'light' ? 'ring-2 ring-blue-600' : ''" class="px-2 py-1 text-xs rounded bg-slate-100 text-slate-900 font-bold hover:opacity-80">
+                            Claro
+                        </button>
+                    </div>
+
+                    <button @click="toggleSpeechSynthesis" :class="isSpeaking ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-700 text-white'" class="px-3 py-1.5 text-xs font-bold rounded-lg hover:bg-slate-600 flex items-center gap-1 transition">
+                        <i :class="isSpeaking ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'"></i>
+                        <span>{{ isSpeaking ? 'Detener' : 'Voz' }}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- NAVEGACIÓN PRINCIPAL -->
+            <nav class="max-w-7xl mx-auto mt-4 flex flex-wrap gap-2 border-t border-slate-800 pt-3">
+                <button @click="currentTab = 'roadmap'" :class="currentTab === 'roadmap' ? 'bg-yellow-400 text-slate-950 font-extrabold border-b-4 border-sena-green shadow-lg' : 'bg-slate-800 text-white hover:bg-slate-700'" class="px-4 py-2.5 rounded-t-xl font-bold transition flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-route"></i> 1. Roadmap Interactivo SENA
+                    <span class="bg-slate-950 text-yellow-400 text-xs px-2 py-0.5 rounded-full font-black">{{ roadmapProgress }}%</span>
+                </button>
+                <button @click="currentTab = 'guia'" :class="currentTab === 'guia' ? 'bg-sena-green text-slate-950 font-extrabold border-b-4 border-yellow-400 shadow-lg' : 'bg-slate-800 text-white hover:bg-slate-700'" class="px-4 py-2.5 rounded-t-xl font-bold transition flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-file-contract"></i> 2. Guía Completa
+                </button>
+                <button @click="currentTab = 'map'" :class="currentTab === 'map' ? 'bg-sena-green text-slate-950 font-extrabold border-b-4 border-yellow-400 shadow-lg' : 'bg-slate-800 text-white hover:bg-slate-700'" class="px-4 py-2.5 rounded-t-xl font-bold transition flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-diagram-project"></i> 3. Mapa de Procesos
+                </button>
+                <button @click="currentTab = 'checklist'" :class="currentTab === 'checklist' ? 'bg-sena-green text-slate-950 font-extrabold border-b-4 border-yellow-400 shadow-lg' : 'bg-slate-800 text-white hover:bg-slate-700'" class="px-4 py-2.5 rounded-t-xl font-bold transition flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-list-check"></i> 4. Check-list
+                    <span class="bg-yellow-400 text-slate-950 text-xs px-2 py-0.5 rounded-full font-black">{{ checklistCompletion }}%</span>
+                </button>
+                <button @click="currentTab = 'products'" :class="currentTab === 'products' ? 'bg-sena-green text-slate-950 font-extrabold border-b-4 border-yellow-400 shadow-lg' : 'bg-slate-800 text-white hover:bg-slate-700'" class="px-4 py-2.5 rounded-t-xl font-bold transition flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-boxes-packing"></i> 5. Catálogo SENOVA
+                </button>
+                <button @click="currentTab = 'results'" :class="currentTab === 'results' ? 'bg-sena-green text-slate-950 font-extrabold border-b-4 border-yellow-400 shadow-lg' : 'bg-slate-800 text-white hover:bg-slate-700'" class="px-4 py-2.5 rounded-t-xl font-bold transition flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-book-bookmark"></i> 6. APA 7 & Resultados
+                </button>
+            </nav>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow p-4 sm:p-6 max-w-7xl w-full mx-auto">
+
+            <!-- VISTA 0: ROADMAP INTERACTIVO ESTILO ROADMAP.SH -->
+            <div v-show="currentTab === 'roadmap'" class="space-y-4">
+                
+                <!-- Barra Superior de Control del Roadmap -->
+                <div class="bg-card-theme p-4 rounded-2xl border-2 border-slate-700 shadow-xl flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-yellow-400 text-slate-950 font-black text-xs px-2.5 py-0.5 rounded border border-slate-950 uppercase">Ruta Metodológica & Normativa</span>
+                            <span class="text-xs font-bold text-sena-green">Centro Textil y de Gestión Industrial</span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-black mt-1">Roadmap de Investigación Pedagógica SENOVA</h2>
+                        <p class="text-xs opacity-80">Haz clic en cualquier nodo para consultar su ficha contextual SENA, normativa y ruta de registro (DNDA, SIC, GrupLAC/CvLAC).</p>
+                    </div>
+
+                    <!-- Buscador, Progreso y Reinicio -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input v-model="roadmapSearch" type="text" placeholder="Filtrar nodo (ej. SIC, DNDA, IEP)..." class="pl-8 pr-3 py-2 text-xs rounded-xl bg-slate-900 text-white border-2 border-slate-700 focus:border-yellow-400 outline-none w-52 sm:w-64">
+                            <button v-if="roadmapSearch" @click="roadmapSearch = ''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900 text-white px-3 py-1.5 rounded-xl border-2 border-yellow-400 flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-300">Progreso:</span>
+                            <span class="text-sm font-black text-yellow-400">{{ completedRoadmapCount }}/{{ totalRoadmapNodes }}</span>
+                        </div>
+
+                        <button @click="resetRoadmapProgress" class="bg-slate-800 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-xl border border-slate-600 transition" title="Reiniciar checkmarks guardados">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Reiniciar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Leyenda de Convenciones -->
+                <div class="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-bold">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-yellow-400 border border-slate-950 inline-block"></span> Ejes Centrales</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-amber-200 border border-slate-950 inline-block"></span> Herramientas / Normas / Fases</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-slate-700 border border-slate-950 inline-block"></span> Productos SENOVA</span>
+                        <span class="flex items-center gap-1.5"><span class="w-6 border-t-2 border-blue-600 inline-block"></span> Flujo Principal</span>
+                        <span class="flex items-center gap-1.5"><span class="w-6 border-t-2 border-dashed border-blue-600 inline-block"></span> Ramificación</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center text-[9px]"><i class="fa-solid fa-check"></i></span> Revisado</span>
+                        <span class="flex items-center gap-1"><span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px]"><i class="fa-solid fa-check"></i></span> Pendiente</span>
+                    </div>
+                </div>
+
+                <!-- LIENZO INTERACTIVO DEL ROADMAP (CON CONECTORES SVG Y NODOS) -->
+                <div ref="roadmapContainer" class="roadmap-canvas relative rounded-3xl border-4 border-slate-800 p-4 sm:p-8 overflow-x-auto shadow-2xl" :class="theme === 'light' ? 'bg-slate-50' : (theme === 'yellow' ? 'bg-black' : 'bg-slate-900/95')">
+                    
+                    <!-- Capa SVG de Conectores Dinámicos -->
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none z-0" style="min-width: 1120px;">
+                        <line v-for="(line, idx) in svgConnectors" :key="idx"
+                              :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2"
+                              :stroke="theme === 'yellow' ? '#FFFF00' : '#2563EB'"
+                              :stroke-width="line.dashed ? '2.5' : '3.5'"
+                              :stroke-dasharray="line.dashed ? '6,6' : 'none'"
+                              stroke-linecap="round" />
+                    </svg>
+
+                    <!-- Estructura en Grid de 12 Columnas (Min-width para mantener geometría de mapa en móviles con scroll suave) -->
+                    <div class="relative z-10 min-w-[1100px] space-y-12">
+                        
+                        <!-- FILA 1: ENTRADAS -> NÚCLEO TRANSFORMADOR -> SALIDAS SENOVA -->
+                        <div class="grid grid-cols-12 gap-4 items-center">
+                            
+                            <!-- COLUMNA IZQUIERDA (3 cols): Hojas de Entradas -->
+                            <div class="col-span-3 space-y-3">
+                                <div v-for="node in roadmapNodesByGroup('entradas_items')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-beige p-3 rounded-xl cursor-pointer relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <div class="flex items-start gap-2.5 pr-5">
+                                        <i :class="[node.icon, 'text-emerald-700 text-base mt-0.5']"></i>
+                                        <div>
+                                            <h4 class="font-black text-xs sm:text-sm leading-tight">{{ node.title }}</h4>
+                                            <p class="text-[11px] text-slate-700 mt-0.5 leading-snug">{{ node.subtitle }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click.stop="toggleNodeDone(node.id)" :title="isNodeDone(node.id) ? 'Marcar como pendiente' : 'Marcar como revisado'"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px] shadow hover:scale-110 transition">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- COLUMNA MEDIA-IZQ (2 cols): Nodo Amarillo ENTRADAS -->
+                            <div class="col-span-2 flex flex-col items-center">
+                                <div v-for="node in roadmapNodesByGroup('entradas_hub')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-yellow p-4 rounded-xl cursor-pointer text-center w-full relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <div class="font-black text-xs sm:text-sm uppercase tracking-wide">
+                                        <i class="fa-solid fa-right-to-bracket mr-1"></i> {{ node.title }}
+                                    </div>
+                                    <div class="text-[11px] font-bold mt-1">{{ node.subtitle }}</div>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-2 bg-slate-200 text-slate-800 border border-slate-400 rounded-lg px-2.5 py-1.5 text-[10px] text-center font-semibold shadow-sm">
+                                    Articula la FPI en ambiente de aprendizaje
+                                </div>
+                            </div>
+
+                            <!-- COLUMNA CENTRAL (2 cols): NÚCLEO TRANSFORMADOR & CORE RESEARCH PROCESS -->
+                            <div class="col-span-2 flex flex-col items-center space-y-5">
+                                <div v-for="node in roadmapNodesByGroup('core_hub')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-yellow p-4 rounded-2xl cursor-pointer text-center w-full relative pt-6', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <span class="rm-orange-badge absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-full text-[10px] font-black uppercase shadow">
+                                        NÚCLEO TRANSFORMADOR
+                                    </span>
+                                    <h3 class="font-black text-sm sm:text-base uppercase leading-tight">{{ node.title }}</h3>
+                                    <p class="text-[11px] font-bold text-slate-800 mt-1">{{ node.subtitle }}</p>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -bottom-2.5 -right-2.5 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+
+                                <!-- SALIDA PRINCIPAL: REGISTRO CALIFICADO -->
+                                <div v-for="node in roadmapNodesByGroup('registro_hub')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-yellow p-3 rounded-xl cursor-pointer text-center w-full relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <span class="text-[10px] font-black uppercase block text-slate-800">SALIDA PRINCIPAL:</span>
+                                    <h4 class="font-black text-xs sm:text-sm uppercase">{{ node.title }}</h4>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- COLUMNA MEDIA-DER (2 cols): Nodo Amarillo SALIDAS SENOVA -->
+                            <div class="col-span-2 flex flex-col items-center">
+                                <div v-for="node in roadmapNodesByGroup('salidas_hub')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-yellow p-4 rounded-xl cursor-pointer text-center w-full relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <div class="font-black text-xs sm:text-sm uppercase tracking-wide">
+                                        <i class="fa-solid fa-right-from-bracket mr-1"></i> {{ node.title }}
+                                    </div>
+                                    <div class="text-[11px] font-bold mt-1">{{ node.subtitle }}</div>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-2 bg-slate-200 text-slate-800 border border-slate-400 rounded-lg px-2.5 py-1.5 text-[10px] text-center font-semibold shadow-sm">
+                                    Productos avalados SIGP / Minciencias
+                                </div>
+                            </div>
+
+                            <!-- COLUMNA DERECHA (3 cols): Productos SENOVA + Ramificaciones -->
+                            <div class="col-span-3 space-y-2.5">
+                                <div v-for="node in roadmapNodesByGroup('salidas_items')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-dark p-2.5 rounded-xl cursor-pointer relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <div class="flex items-center gap-2.5 pr-5">
+                                        <div class="w-7 h-7 rounded-lg bg-slate-800 text-sena-green flex items-center justify-center text-xs shrink-0 border border-slate-600">
+                                            <i :class="node.icon"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-black text-xs leading-tight text-white">{{ node.title }}</h4>
+                                            <p class="text-[10px] text-slate-300">{{ node.subtitle }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px] shadow">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Sub-ramificación horizontal: Patente, Libro, Revista -->
+                                <div class="grid grid-cols-3 gap-1.5 pt-1">
+                                    <div v-for="node in roadmapNodesByGroup('salidas_extra')" :key="node.id"
+                                         :data-node-id="node.id"
+                                         @click="openRoadmapNode(node)"
+                                         :class="['rm-node rm-beige p-2 rounded-lg cursor-pointer text-center relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                        <i :class="[node.icon, 'text-emerald-800 text-xs block mb-0.5']"></i>
+                                        <span class="font-black text-[10px] block leading-tight">{{ node.title }}</span>
+                                        <button @click.stop="toggleNodeDone(node.id)"
+                                                :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                                class="absolute -top-2 -right-1.5 w-4 h-4 rounded-full text-white border border-slate-950 flex items-center justify-center text-[8px]">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- FILA 2: SISTEMAS DE CONTROL NORMATIVO (IZQ) Y CATÁLOGO GRUPLAC (DER) -->
+                        <div class="grid grid-cols-12 gap-4 items-center pt-2">
+                            
+                            <!-- Normas específicas (2 cols) -->
+                            <div class="col-span-3 space-y-2.5">
+                                <div v-for="node in roadmapNodesByGroup('normas_items')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-beige p-2.5 rounded-xl cursor-pointer relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <div class="pr-5">
+                                        <span class="font-black text-xs block">{{ node.title }}</span>
+                                        <span class="text-[10px] text-slate-700 block">{{ node.subtitle }}</span>
+                                    </div>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Nodo Amarillo SISTEMAS DE CONTROL NORMATIVO (2 cols) -->
+                            <div class="col-span-2">
+                                <div v-for="node in roadmapNodesByGroup('normas_hub')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-yellow p-3.5 rounded-xl cursor-pointer text-center relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-950 text-yellow-400 text-[10px] mb-1">
+                                        <i class="fa-solid fa-play"></i>
+                                    </span>
+                                    <h4 class="font-black text-xs uppercase leading-tight">{{ node.title }}</h4>
+                                    <p class="text-[10px] font-bold mt-1">{{ node.subtitle }}</p>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Espacio central para tronco conector vertical hacia Fases (2 cols) -->
+                            <div class="col-span-2 flex justify-center items-center">
+                                <div class="bg-slate-900/90 text-yellow-400 border-2 border-yellow-400 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow">
+                                    Articulación SENA - MEN
+                                </div>
+                            </div>
+
+                            <!-- Nodo Amarillo CATÁLOGO DE PRODUCTOS GrupLAC (2 cols) -->
+                            <div class="col-span-2">
+                                <div v-for="node in roadmapNodesByGroup('gruplac_hub')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-yellow p-3.5 rounded-xl cursor-pointer text-center relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <h4 class="font-black text-xs uppercase leading-tight">{{ node.title }}</h4>
+                                    <p class="text-[10px] font-bold mt-1">{{ node.subtitle }}</p>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Ramas GrupLAC: Tipos de Artículos (A1, A2, B, C) y Propiedad Intelectual (3 cols) -->
+                            <div class="col-span-3 space-y-3">
+                                <div class="grid grid-cols-12 gap-2 items-center">
+                                    <div class="col-span-8">
+                                        <div v-for="node in roadmapNodesByGroup('gruplac_articulos')" :key="node.id"
+                                             :data-node-id="node.id"
+                                             @click="openRoadmapNode(node)"
+                                             :class="['rm-node rm-beige p-2.5 rounded-xl cursor-pointer relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                            <span class="font-black text-xs block">{{ node.title }}</span>
+                                            <span class="text-[10px] text-slate-700">{{ node.subtitle }}</span>
+                                            <button @click.stop="toggleNodeDone(node.id)"
+                                                    :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                                    class="absolute -right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full text-white border border-slate-950 flex items-center justify-center text-[9px]">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-4 grid grid-cols-2 gap-1">
+                                        <span v-for="cat in ['A1', 'A2', 'B', 'C']" :key="cat"
+                                              @click="openRoadmapNode(roadmapNodesByGroup('gruplac_articulos')[0])"
+                                              class="rm-beige border border-slate-950 rounded px-1.5 py-0.5 text-[10px] font-black text-center cursor-pointer hover:bg-yellow-400">
+                                            {{ cat }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div v-for="node in roadmapNodesByGroup('gruplac_pi')" :key="node.id"
+                                     :data-node-id="node.id"
+                                     @click="openRoadmapNode(node)"
+                                     :class="['rm-node rm-beige p-2.5 rounded-xl cursor-pointer relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                    <span class="font-black text-xs block">{{ node.title }}</span>
+                                    <span class="text-[10px] text-slate-700">{{ node.subtitle }}</span>
+                                    <button @click.stop="toggleNodeDone(node.id)"
+                                            :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                            class="absolute -right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-white border-2 border-slate-950 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- FILA 3: FASES DE INVESTIGACIÓN (FLUJO SECUENCIAL DE 7 NODOS) -->
+                        <div class="pt-4 flex flex-col items-center">
+                            <div v-for="node in roadmapNodesByGroup('fases_hub')" :key="node.id"
+                                 :data-node-id="node.id"
+                                 @click="openRoadmapNode(node)"
+                                 :class="['rm-node rm-yellow px-8 py-2.5 rounded-full cursor-pointer font-black text-xs sm:text-sm uppercase tracking-wider mb-5 relative', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                <i class="fa-solid fa-layer-group mr-1.5"></i> {{ node.title }}
+                            </div>
+
+                            <div class="w-full p-4 rounded-2xl border-2 border-slate-800 bg-white/80 dark:bg-slate-950/60 backdrop-blur-sm">
+                                <div class="grid grid-cols-7 gap-3">
+                                    <div v-for="(node, idx) in roadmapNodesByGroup('fases_items')" :key="node.id"
+                                         :data-node-id="node.id"
+                                         @click="openRoadmapNode(node)"
+                                         :class="['rm-node rm-beige p-3 rounded-xl cursor-pointer text-center relative flex flex-col justify-center items-center', isNodeDimmed(node) ? 'opacity-30' : 'opacity-100']">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="w-4 h-4 rounded-full bg-slate-950 text-yellow-400 text-[9px] font-black flex items-center justify-center">
+                                                {{ idx + 1 }}
+                                            </span>
+                                            <span class="font-black text-xs leading-tight">{{ node.title }}</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-700 mt-1 leading-tight">{{ node.subtitle }}</span>
+                                        <button @click.stop="toggleNodeDone(node.id)"
+                                                :class="isNodeDone(node.id) ? 'bg-purple-600' : 'bg-emerald-600'"
+                                                class="absolute -right-2 -top-2 w-5 h-5 rounded-full text-white border border-slate-950 flex items-center justify-center text-[9px]">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            
+            <!-- VISTA 1: GUÍA COMPLETA DEL PROYECTO DE INVESTIGACIÓN (DESARROLLADA) -->
+            <div v-show="currentTab === 'guia'" class="space-y-6">
+                <div class="bg-card-theme p-6 rounded-2xl border-4 border-sena-green shadow-2xl">
+                    <div class="flex flex-wrap justify-between items-center border-b-2 border-slate-700 pb-4 mb-6 gap-4">
+                        <div>
+                            <span class="bg-sena-green text-slate-950 font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Documento Institucional Formal</span>
+                            <h2 class="text-2xl sm:text-3xl font-black mt-2 text-white flex items-center gap-3">
+                                <i class="fa-solid fa-file-signature text-sena-green"></i>
+                                GUÍA PARA LA PRESENTACIÓN DEL PROYECTO DE INVESTIGACIÓN
+                            </h2>
+                            <p class="text-sm text-slate-300">Estructura formulada para el Centro Textil y de Gestión Industrial con soporte en Hernández-Sampieri y normas APA 7</p>
+                        </div>
+                        <button @click="speakText(documentoCompletoText)" class="bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition shadow">
+                            <i class="fa-solid fa-volume-high"></i> Escuchar Documento Completo
+                        </button>
+                    </div>
+
+                    <!-- NAVEGACIÓN RÁPIDA POR SECCIONES DE LA GUÍA -->
+                    <div class="flex flex-wrap gap-2 mb-6 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <button v-for="(sec, idx) in seccionesGuia" :key="sec.id" @click="scrollToSection(sec.id)" class="bg-slate-900 hover:bg-sena-green hover:text-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                            {{ idx + 1 }}. {{ sec.tituloShort }}
+                        </button>
+                    </div>
+
+                    <!-- DESARROLLO DE LOS 8 NUMERALES -->
+                    <div class="space-y-8 text-slate-200">
+                        
+                        <!-- 1. TÍTULO -->
+                        <section id="guia-1" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                                    TÍTULO DEL PROYECTO
+                                </h3>
+                                <button @click="speakText('1. Título del Proyecto. ' + guiaData.titulo)" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+                            <p class="text-base font-bold text-white bg-slate-950 p-4 rounded-lg border border-slate-800 leading-relaxed">{{ guiaData.titulo }}</p>
+                        </section>
+
+                        <!-- 2. RESUMEN -->
+                        <section id="guia-2" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                                    RESUMEN DEL PROYECTO
+                                </h3>
+                                <button @click="speakText('2. Resumen del Proyecto. ' + guiaData.resumen)" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+                            <p class="text-sm leading-relaxed text-justify bg-slate-950/60 p-4 rounded-lg border border-slate-800">{{ guiaData.resumen }}</p>
+                        </section>
+
+                        <!-- 3. DESCRIPCIÓN DEL PROYECTO -->
+                        <section id="guia-3" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700 space-y-4">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-1">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                                    DESCRIPCIÓN DEL PROYECTO
+                                </h3>
+                                <button @click="speakText('3. Descripción del Proyecto. Planteamiento, Formulación, Justificación y Antecedentes.')" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+
+                            <div class="space-y-3">
+                                <h4 class="text-sm font-black text-sena-green">3.1 Planteamiento del Problema de Investigación</h4>
+                                <p class="text-xs leading-relaxed text-justify">{{ guiaData.planteamiento }}</p>
+
+                                <h4 class="text-sm font-black text-sena-green mt-4">3.2 Formulación del Problema (Pregunta de Investigación)</h4>
+                                <div class="bg-slate-950 p-4 rounded-xl border-l-4 border-yellow-400 font-bold text-yellow-300 text-sm">
+                                    "{{ guiaData.pregunta }}"
+                                </div>
+
+                                <h4 class="text-sm font-black text-sena-green mt-4">3.3 Justificación</h4>
+                                <p class="text-xs leading-relaxed text-justify">{{ guiaData.justificacion }}</p>
+
+                                <h4 class="text-sm font-black text-sena-green mt-4">3.4 Antecedentes</h4>
+                                <p class="text-xs leading-relaxed text-justify">{{ guiaData.antecedentes }}</p>
+                            </div>
+                        </section>
+
+                        <!-- 4. REFERENTE CONCEPTUAL -->
+                        <section id="guia-4" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">4</span>
+                                    REFERENTE CONCEPTUAL
+                                </h3>
+                                <button @click="speakText('4. Referente Conceptual y categorías principales.')" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+                            <p class="text-xs leading-relaxed mb-3">{{ guiaData.referenteConceptual }}</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-950 rounded border border-slate-800"><strong class="text-sena-green block">Investigación Pedagógica FPI:</strong> Proceso de indagación en el aula para resolver problemas del sector textil.</div>
+                                <div class="p-3 bg-slate-950 rounded border border-slate-800"><strong class="text-sena-green block">Estrategia IEP:</strong> Modelo constructivista que potencia indagación y pensamiento científico.</div>
+                                <div class="p-3 bg-slate-950 rounded border border-slate-800"><strong class="text-sena-green block">Barreras Contextuales:</strong> Restricciones de tiempo, contratación OPS y rotación.</div>
+                                <div class="p-3 bg-slate-950 rounded border border-slate-800"><strong class="text-sena-green block">Registro Calificado:</strong> Requisito del MEN (Decreto 1330) para continuar la oferta académica.</div>
+                            </div>
+                        </section>
+
+                        <!-- 5. OBJETIVOS -->
+                        <section id="guia-5" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">5</span>
+                                    OBJETIVOS DEL PROYECTO
+                                </h3>
+                                <button @click="speakText('5. Objetivo General y Objetivos Específicos.')" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <strong class="text-sena-green text-sm block mb-1">Objetivo General:</strong>
+                                    <p class="p-3 bg-slate-950 rounded border border-slate-800 leading-relaxed">{{ guiaData.objetivoGeneral }}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-sena-green text-sm block mb-1">Objetivos Específicos:</strong>
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li v-for="obj in guiaData.objetivosEspecificos" :key="obj">{{ obj }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 6. METODOLOGÍA -->
+                        <section id="guia-6" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">6</span>
+                                    METODOLOGÍA PROPUESTA
+                                </h3>
+                                <button @click="speakText('6. Metodología Propuesta cualitativa e inductiva.')" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+                            <p class="text-xs leading-relaxed text-justify">{{ guiaData.metodologia }}</p>
+                        </section>
+
+                        <!-- 7. CRONOGRAMA -->
+                        <section id="guia-7" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">7</span>
+                                    CRONOGRAMA DE ACTIVIDADES (12 MESES)
+                                </h3>
+                                <button @click="speakText('7. Cronograma de actividades en cuatro fases durante 12 meses.')" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-950 text-sena-green border-b border-slate-800">
+                                            <th class="p-2">Fase / Actividad</th>
+                                            <th class="p-2 text-center" v-for="m in 12" :key="m">M{{ m }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="act in cronogramaData" :key="act.nombre" class="border-b border-slate-800/60 hover:bg-slate-950/40">
+                                            <td class="p-2 font-medium text-slate-300">{{ act.nombre }}</td>
+                                            <td v-for="m in 12" :key="m" class="p-2 text-center">
+                                                <span v-if="act.meses.includes(m)" class="inline-block w-3 h-3 rounded-full bg-sena-green"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <!-- 8. BIBLIOGRAFÍA APA 7 -->
+                        <section id="guia-8" class="bg-slate-900/90 p-5 rounded-xl border-2 border-slate-700">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">8</span>
+                                    BIBLIOGRAFÍA (NORMAS APA 7.ª EDICIÓN)
+                                </h3>
+                                <button @click="speakText('8. Bibliografía en Normas APA séptima edición.')" class="text-xs text-sena-green hover:underline font-bold"><i class="fa-solid fa-volume-high"></i> Leer</button>
+                            </div>
+                            <ul class="space-y-2 text-xs font-mono text-slate-300 pl-2">
+                                <li v-for="ref in bibliografiaData" :key="ref" class="pl-4 -indent-4 border-b border-slate-800/40 pb-1.5">{{ ref }}</li>
+                            </ul>
+                        </section>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 2: MAPA DE PROCESOS INTERACTIVO -->
+            <div v-show="currentTab === 'map'" class="space-y-6">
+
+                <!-- BLOQUE SUPERIOR: NORMATIVIDAD SENOVA Y REGISTRO CALIFICADO -->
+                <section class="bg-card-theme p-5 rounded-2xl border-4 border-sena-darkGreen shadow-2xl relative overflow-hidden">
+                    <div class="flex items-center justify-between border-b-2 border-sena-green/30 pb-3 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-black flex items-center gap-3">
+                            <i class="fa-solid fa-landmark text-sena-green text-2xl"></i>
+                            ENTRADA DE GOBIERNO: Normatividad SENOVA y Lineamientos MEN
+                        </h2>
+                        <span class="bg-sena-green text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">Marco Normativo Vigente</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div v-for="norm in normatividad" :key="norm.id" class="p-4 rounded-xl border-2 bg-slate-900/60 border-slate-700 hover:border-yellow-400 transition cursor-pointer" @click="speakText(norm.title + '. ' + norm.desc)">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-yellow-400 text-slate-950 font-black text-xs px-2 py-0.5 rounded">{{ norm.code }}</span>
+                                <h3 class="font-extrabold text-base">{{ norm.title }}</h3>
+                            </div>
+                            <p class="text-sm opacity-90 leading-relaxed">{{ norm.desc }}</p>
+                            <div class="mt-3 text-xs font-bold text-sena-green flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> {{ norm.impact }}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- BLOQUE CENTRAL DEL MAPA (ENTRADAS - PREGUNTA CENTRAL - SALIDAS) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch relative">
+
+                    <!-- ENTRADAS (HERRAMIENTAS PEDAGÓGICAS) - 3 COLS -->
+                    <div class="lg:col-span-3 flex flex-col justify-between space-y-4">
+                        <div class="bg-card-theme p-4 rounded-2xl border-4 border-slate-700 shadow-xl flex-1 flex flex-col">
+                            <div class="bg-blue-900/80 text-white p-3 rounded-xl mb-4 font-black text-center text-lg border-2 border-blue-400">
+                                <i class="fa-solid fa-right-to-bracket mr-2"></i> ENTRADAS
+                                <span class="block text-xs font-normal">Herramientas en Formación</span>
+                            </div>
+
+                            <div class="space-y-3 flex-1 flex flex-col justify-around">
+                                <div v-for="input in entradasProcess" :key="input.id" class="p-3 rounded-xl border-2 border-slate-700 bg-slate-900/40 hover:border-sena-green transition cursor-pointer group" @click="speakText('Entrada: ' + input.nombre + '. ' + input.detalle)">
+                                    <div class="flex items-center gap-2 font-bold text-sm text-sena-green group-hover:text-yellow-400">
+                                        <i :class="input.icon" class="text-base"></i>
+                                        <span>{{ input.nombre }}</span>
+                                    </div>
+                                    <p class="text-xs opacity-80 mt-1">{{ input.detalle }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PREGUNTA DE INVESTIGACIÓN CENTRAL (NÚCLEO DEL MAPA) - 5 COLS -->
+                    <div class="lg:col-span-6 flex flex-col">
+                        <div class="bg-card-theme p-6 rounded-2xl border-4 border-sena-green shadow-2xl flex-1 flex flex-col justify-between relative glow-box">
+                            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-sena-accent text-slate-950 font-black text-sm px-4 py-1 rounded-full uppercase border-2 border-slate-950">
+                                NÚCLEO TRANSFORMADOR DE INVESTIGACIÓN
+                            </div>
+
+                            <div class="mt-4">
+                                <span class="bg-slate-800 text-yellow-400 text-xs font-black px-3 py-1 rounded-md border border-slate-700">PREGUNTA CUALITATIVA SELECCIONADA</span>
+                                <blockquote class="mt-4 p-4 rounded-xl border-l-8 border-yellow-400 bg-slate-900/80 font-bold text-base sm:text-lg leading-relaxed text-yellow-300">
+                                    "¿De qué manera se configuran las vivencias y percepciones de los instructores (contratistas y vinculados) del Centro Textil y de Gestión Industrial ante las barreras normativas, metodológicas e institucionales que obstaculizan la promoción de la investigación pedagógica y la renovación de los registros calificados?"
+                                </blockquote>
+                            </div>
+
+                            <!-- Desglose Cualitativo en Matriz -->
+                            <div class="mt-4 grid grid-cols-2 gap-3 text-xs">
+                                <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700">
+                                    <span class="font-extrabold text-sena-green block border-b border-slate-800 pb-1 mb-1">SUJETOS DE ESTUDIO</span>
+                                    Instructores Contratistas y Vinculados (Perfil Investigador).
+                                </div>
+                                <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700">
+                                    <span class="font-extrabold text-sena-green block border-b border-slate-800 pb-1 mb-1">CONTEXTO REAL</span>
+                                    Centro Textil y de Gestión Industrial y sus Subsedes.
+                                </div>
+                                <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700">
+                                    <span class="font-extrabold text-sena-green block border-b border-slate-800 pb-1 mb-1">BARRERAS CLAVE</span>
+                                    Falta de obligaciones contractuales, rotación y desconocimiento de rutas SENOVA.
+                                </div>
+                                <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700">
+                                    <span class="font-extrabold text-sena-green block border-b border-slate-800 pb-1 mb-1">IMPACTO CRÍTICO</span>
+                                    Pérdida de Oferta Académica / Registro Calificado MEN.
+                                </div>
+                            </div>
+
+                            <!-- Botón de Audio de la Pregunta -->
+                            <button @click="speakText(preguntaCentralText)" class="mt-4 w-full bg-sena-green hover:bg-green-600 text-slate-950 font-black py-3 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 border-2 border-slate-950">
+                                <i class="fa-solid fa-volume-high text-base"></i> Escuchar Pregunta Problema
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SALIDAS (PRODUCTOS DE INVESTIGACIÓN SENOVA) - 4 COLS -->
+                    <div class="lg:col-span-3 flex flex-col justify-between space-y-4">
+                        <div class="bg-card-theme p-4 rounded-2xl border-4 border-slate-700 shadow-xl flex-1 flex flex-col">
+                            <div class="bg-sena-green text-slate-950 p-3 rounded-xl mb-4 font-black text-center text-lg border-2 border-yellow-400">
+                                <i class="fa-solid fa-right-from-bracket mr-2"></i> SALIDAS
+                                <span class="block text-xs font-semibold">Productos SENOVA Formativos</span>
+                            </div>
+
+                            <div class="space-y-2 flex-1 overflow-y-auto max-h-[380px] pr-1">
+                                <div v-for="prod in productosList" :key="prod.id" @click="selectProduct(prod)" class="p-2.5 rounded-xl border-2 border-slate-700 bg-slate-900/60 hover:border-yellow-400 transition cursor-pointer flex items-center justify-between group">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-slate-800 text-sena-green flex items-center justify-center font-bold text-sm group-hover:bg-yellow-400 group-hover:text-slate-950 transition">
+                                            <i :class="prod.icon"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-extrabold text-xs text-white group-hover:text-yellow-400">{{ prod.nombre }}</h4>
+                                            <span class="text-[10px] opacity-75">{{ prod.categoria }}</span>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- PARTE INFERIOR: TABLERO DE SEGUIMIENTO Y ANALÍTICA DE CUMPLIMIENTO -->
+                <section class="bg-card-theme p-6 rounded-2xl border-4 border-sena-green shadow-2xl">
+                    <div class="flex flex-wrap items-center justify-between border-b-2 border-slate-700 pb-4 mb-4 gap-4">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-black flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-sena-green"></i>
+                                TABLERO DE SEGUIMIENTO EN TIEMPO REAL
+                            </h2>
+                            <p class="text-sm opacity-80">Análisis Automático basado en el Check-list de la Guía de Investigación</p>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="bg-slate-900 p-3 rounded-xl border-2 border-yellow-400 flex items-center gap-3">
+                                <div class="text-right">
+                                    <span class="text-xs font-bold block text-slate-400">CONGRUENCIA PROYECTO</span>
+                                    <span class="text-2xl font-black text-yellow-400">{{ checklistCompletion }}%</span>
+                                </div>
+                                <div class="w-12 h-12 rounded-full border-4 border-yellow-400 flex items-center justify-center font-black text-xs bg-slate-950 text-white">
+                                    {{ checklistCompletion >= 95 ? '95%+' : 'INCOMP' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indicadores Dinámicos -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 rounded-xl border-2 bg-slate-900/60 border-slate-700">
+                            <span class="text-xs font-bold text-slate-400 block mb-1">DIAGNÓSTICO METODOLÓGICO</span>
+                            <div class="flex items-center gap-2">
+                                <i :class="statusIcon" class="text-2xl"></i>
+                                <span class="font-extrabold text-base">{{ projectStatusText }}</span>
+                            </div>
+                            <p class="text-xs opacity-80 mt-2">{{ projectStatusDetail }}</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border-2 bg-slate-900/60 border-slate-700">
+                            <span class="text-xs font-bold text-slate-400 block mb-1">RIESGO EN REGISTRO CALIFICADO (MEN)</span>
+                            <div class="flex items-center gap-2">
+                                <span :class="riskBadgeClass" class="px-3 py-1 rounded-md text-xs font-black uppercase">
+                                    {{ riskLevelText }}
+                                </span>
+                            </div>
+                            <p class="text-xs opacity-80 mt-2">{{ riskDetailText }}</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border-2 bg-slate-900/60 border-slate-700">
+                            <span class="text-xs font-bold text-slate-400 block mb-1">RECOMENDACIÓN METODOLÓGICA</span>
+                            <p class="text-xs font-semibold leading-relaxed text-sena-green">
+                                {{ recommendationText }}
+                            </p>
+                            <button @click="currentTab = 'checklist'" class="mt-2 text-xs text-yellow-400 underline font-bold hover:text-white">
+                                Ir al Check-list para Completar <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- VISTA 3: CHECK-LIST GUÍA DE INVESTIGACIÓN SENA -->
+            <div v-show="currentTab === 'checklist'" class="space-y-6">
+                <div class="bg-card-theme p-6 rounded-2xl border-4 border-slate-700 shadow-2xl">
+                    <div class="flex flex-wrap justify-between items-center border-b-2 border-slate-700 pb-4 mb-6 gap-4">
+                        <div>
+                            <h2 class="text-2xl font-black flex items-center gap-3">
+                                <i class="fa-solid fa-list-check text-yellow-400"></i>
+                                CHECK-LIST DE CUMPLIMIENTO GUÍA DE INVESTIGACIÓN
+                            </h2>
+                            <p class="text-sm opacity-80">Evalúe el grado de estructuración formal de su propuesta según los requerimientos institucionales</p>
+                        </div>
+
+                        <div class="bg-slate-900 p-4 rounded-xl border-2 border-sena-green text-center">
+                            <span class="text-xs font-bold block text-slate-300">NIVEL DE CONGRUENCIA ALCANZADO</span>
+                            <span class="text-3xl font-black text-sena-green">{{ checklistCompletion }}% / 100%</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div v-for="(section, idx) in checklistSections" :key="section.id" class="p-5 rounded-xl border-2 border-slate-700 bg-slate-900/50">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                                <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2">
+                                    <span class="bg-slate-800 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold">{{ idx + 1 }}</span>
+                                    {{ section.titulo }}
+                                </h3>
+                                <span class="text-xs font-bold bg-slate-800 px-3 py-1 rounded-md text-sena-green border border-slate-700">
+                                    {{ sectionProgress(section) }}% Sección Completada
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label v-for="item in section.items" :key="item.id" class="p-3 rounded-lg border-2 border-slate-800 bg-slate-900 hover:border-slate-600 transition flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" v-model="item.completed" class="w-5 h-5 mt-0.5 rounded text-sena-green focus:ring-yellow-400 accent-sena-green cursor-pointer">
+                                    <div>
+                                        <span class="text-sm font-bold block text-white">{{ item.label }}</span>
+                                        <span class="text-xs opacity-75 leading-tight block mt-0.5">{{ item.desc }}</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 4: CATÁLOGO DE PRODUCTOS SENOVA -->
+            <div v-show="currentTab === 'products'" class="space-y-6">
+                <div class="bg-card-theme p-6 rounded-2xl border-4 border-slate-700 shadow-2xl">
+                    <div class="border-b-2 border-slate-700 pb-4 mb-6">
+                        <h2 class="text-2xl font-black flex items-center gap-3">
+                            <i class="fa-solid fa-boxes-packing text-sena-green"></i>
+                            CATÁLOGO DE PRODUCTOS DE INVESTIGACIÓN SENOVA
+                        </h2>
+                        <p class="text-sm opacity-80">Requerimientos y condiciones para clasificar productos generados por instructores SENA</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div v-for="prod in productosList" :key="prod.id" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-900/70 hover:border-sena-green transition flex flex-col justify-between">
+                            <div>
+                                <div class="w-12 h-12 rounded-xl bg-sena-green text-slate-950 font-black text-2xl flex items-center justify-center mb-3">
+                                    <i :class="prod.icon"></i>
+                                </div>
+                                <span class="bg-slate-800 text-yellow-400 text-[10px] font-black px-2 py-0.5 rounded uppercase border border-slate-700">{{ prod.categoria }}</span>
+                                <h3 class="text-lg font-black mt-2 text-white">{{ prod.nombre }}</h3>
+                                <p class="text-xs opacity-80 mt-2 leading-relaxed">{{ prod.descripcion }}</p>
+                            </div>
+
+                            <div class="mt-4 border-t border-slate-800 pt-3">
+                                <span class="text-[11px] font-bold text-sena-green block mb-1">REQUISITO MINCIENCIAS / SENOVA:</span>
+                                <p class="text-xs font-medium text-slate-300 bg-slate-950 p-2 rounded border border-slate-800">{{ prod.requisito }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 5: RESULTADOS E INTEGRACIÓN DE FUENTES (NORMAS APA 7) -->
+            <div v-show="currentTab === 'results'" class="space-y-6">
+                <div class="bg-card-theme p-6 rounded-2xl border-4 border-sena-green shadow-2xl">
+                    <div class="border-b-2 border-slate-700 pb-4 mb-6 flex flex-wrap justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-black flex items-center gap-3 text-white">
+                                <i class="fa-solid fa-book-bookmark text-sena-green"></i>
+                                MARCO DE INTEGRACIÓN TEÓRICO-NORMATIVO Y RESULTADOS (APA 7)
+                            </h2>
+                            <p class="text-sm opacity-80">Fundamentación cualitativa e impactos institucionales proyectados para el Centro Textil y de Gestión Industrial</p>
+                        </div>
+                        <span class="bg-sena-accent text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg uppercase">
+                            Normas APA 7.ª Edición
+                        </span>
+                    </div>
+
+                    <!-- APARTADO DE INTEGRACIÓN TEÓRICA DE FUENTES -->
+                    <section class="mb-8 p-6 rounded-xl border-2 border-yellow-400 bg-slate-950/90 text-white space-y-4">
+                        <h3 class="text-lg font-black text-yellow-400 flex items-center gap-2 border-b border-slate-800 pb-2">
+                            <i class="fa-solid fa-quote-left"></i> APARTADO: INTEGRACIÓN DE FUENTES A LA GUÍA DE INVESTIGACIÓN
+                        </h3>
+                        <p class="text-xs leading-relaxed text-slate-200">
+                            A continuación se presenta la articulación explícita de las fuentes clave de investigación dentro del proyecto, citadas bajo los parámetros de la <strong>7.ª edición de las Normas APA</strong>:
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div class="p-4 rounded-lg bg-slate-900 border border-slate-700 hover:border-sena-green transition">
+                                <span class="bg-sena-green text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase">Escuela Nacional de Instructores (ENI)</span>
+                                <h4 class="text-sm font-bold text-white mt-1">Malagón Ruiz, R. Y. (2015)</h4>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Conceptualiza la investigación pedagógica en la Formación Profesional Integral (FPI) como un <em>"campo de emergencias y posibilidades"</em> para la cualificación docente (Malagón Ruiz, 2015, p. 22). Sustenta el Planteamiento del Problema (3.1) y el Referente Conceptual (4) al fundamentar que la investigación no es ajena al instructor, sino un componente inherente a su práctica reflexiva en el Centro Textil.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-lg bg-slate-900 border border-slate-700 hover:border-sena-green transition">
+                                <span class="bg-sena-green text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase">Dirección de Formación Profesional</span>
+                                <h4 class="text-sm font-bold text-white mt-1">Servicio Nacional de Aprendizaje [SENA] (2014)</h4>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Establece los <em>Lineamientos para la Investigación Aplicada</em> que norman la dedicación horaria (Res. 642/2004) y reconocen las obligaciones investigativas según la modalidad contractual. Respalda la dimensión normativa del Planteamiento (3.1) evidenciando la brecha entre la norma institucional y la vivencia real de los contratistas.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-lg bg-slate-900 border border-slate-700 hover:border-sena-green transition">
+                                <span class="bg-sena-green text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase">Pedagogía e Investigación en Aula</span>
+                                <h4 class="text-sm font-bold text-white mt-1">Salamanca-Meneses & Hernández-Suárez (2018)</h4>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Aporta el modelo de la <em>Investigación como Estrategia Pedagógica (IEP)</em>, demostrando cuantitativamente su efectividad en la potenciación del pensamiento crítico y la indagación científica. Se integra en la Justificación (3.3) y los Antecedentes (3.4) para fundamentar cómo articular proyectos investigativos al aula formativa.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-lg bg-slate-900 border border-slate-700 hover:border-sena-green transition">
+                                <span class="bg-sena-green text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase">Ética & Calidad MEN</span>
+                                <h4 class="text-sm font-bold text-white mt-1">MinCiencias (2018) & MEN (2019)</h4>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Fundamentan los criterios de integridad científica, transparencia e Inteligencia Artificial en la investigación (MinCiencias, 2018), así como los requerimientos del Decreto 1330 para la renovación del Registro Calificado (MEN, 2019). Respaldan la Justificación (3.3) y las Consideraciones Éticas de la Metodología (6.4).
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- MATRIZ DE RESULTADOS ESPERADOS -->
+                    <h3 class="text-xl font-black text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-sena-green"></i> MATRIZ DE RESULTADOS ESPERADOS DEL PROYECTO
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div v-for="res in resultadosEsperados" :key="res.id" class="p-5 rounded-xl border-2 border-slate-700 bg-slate-900/80 hover:border-yellow-400 transition flex flex-col justify-between shadow-lg">
+                            <div>
+                                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+                                    <span class="text-xs font-black px-2.5 py-1 rounded bg-slate-800 text-yellow-400 border border-slate-700">{{ res.codigo }}</span>
+                                    <span class="text-xs font-bold text-sena-green"><i class="fa-solid fa-bullseye mr-1"></i> {{ res.tipo }}</span>
+                                </div>
+                                <h3 class="text-lg font-black text-white mb-2">{{ res.titulo }}</h3>
+                                <p class="text-xs text-slate-300 leading-relaxed mb-4">{{ res.descripcion }}</p>
+                            </div>
+
+                            <div class="space-y-2 bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs">
+                                <div><strong class="text-sena-green">Indicador de Logro:</strong> {{ res.indicador }}</div>
+                                <div><strong class="text-yellow-400">Beneficiario Directo:</strong> {{ res.beneficiario }}</div>
+                                <div><strong class="text-slate-300">Sustento Teórico/Normativo:</strong> <span class="italic">{{ res.fuenteAPA }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- PANEL LATERAL (DRAWER) DE FICHA TÉCNICA CONTEXTUAL SENA PARA NODOS DEL ROADMAP -->
+        <div v-if="activeRoadmapNode" class="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-xs" @click.self="activeRoadmapNode = null">
+            <div class="bg-slate-900 border-l-4 border-yellow-400 w-full max-w-xl h-full overflow-y-auto p-6 text-white shadow-2xl flex flex-col justify-between">
+                <div>
+                    <!-- Encabezado del Drawer -->
+                    <div class="flex items-start justify-between border-b-2 border-slate-800 pb-4 mb-5 gap-3">
+                        <div>
+                            <span class="bg-yellow-400 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded uppercase tracking-wider">
+                                {{ activeRoadmapNode.categoryLabel }}
+                            </span>
+                            <h3 class="text-xl sm:text-2xl font-black mt-2 text-white flex items-center gap-2">
+                                <i :class="[activeRoadmapNode.icon, 'text-sena-green']"></i>
+                                {{ activeRoadmapNode.title }}
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-0.5">{{ activeRoadmapNode.subtitle }}</p>
+                        </div>
+                        <button @click="activeRoadmapNode = null" class="bg-slate-800 hover:bg-red-600 text-white w-9 h-9 rounded-xl flex items-center justify-center transition shrink-0" aria-label="Cerrar panel">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+
+                    <!-- Contenido Estructurado Contextual SENA -->
+                    <div class="space-y-4 text-sm">
+                        
+                        <!-- 1. Definición y Rol en el SENA -->
+                        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+                            <h4 class="text-xs font-black uppercase text-sena-green tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-building-columns"></i> 1. Definición y Rol en el SENA (Centro Textil y GI)
+                            </h4>
+                            <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">{{ activeRoadmapNode.senaContext }}</p>
+                        </div>
+
+                        <!-- 2. Fundamento Normativo / Teórico -->
+                        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+                            <h4 class="text-xs font-black uppercase text-yellow-400 tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-scale-balanced"></i> 2. Fundamento Normativo y Teórico (APA 7)
+                            </h4>
+                            <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">{{ activeRoadmapNode.normativeBasis }}</p>
+                        </div>
+
+                        <!-- 3. Ruta Operativa / Registro -->
+                        <div class="p-4 rounded-xl bg-slate-950 border-2 border-sena-green/50">
+                            <h4 class="text-xs font-black uppercase text-emerald-400 tracking-wider mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-list-ol"></i> 3. Ruta Operativa / Registro Institucional
+                            </h4>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-xs sm:text-sm text-slate-200">
+                                <li v-for="(step, idx) in activeRoadmapNode.operationalSteps" :key="idx" class="leading-relaxed">
+                                    {{ step }}
+                                </li>
+                            </ol>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Botones de Acción Inferiores -->
+                <div class="pt-5 mt-6 border-t border-slate-800 flex flex-wrap gap-3">
+                    <button @click="toggleNodeDone(activeRoadmapNode.id)"
+                            :class="isNodeDone(activeRoadmapNode.id) ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-sena-green hover:bg-green-500 text-slate-950'"
+                            class="flex-1 font-black py-3 px-4 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 border-2 border-slate-950">
+                        <i :class="isNodeDone(activeRoadmapNode.id) ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle-check'"></i>
+                        <span>{{ isNodeDone(activeRoadmapNode.id) ? 'Nodo Revisado (Completado)' : 'Marcar Nodo como Revisado' }}</span>
+                    </button>
+
+                    <button @click="speakNodeSummary(activeRoadmapNode)"
+                            class="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black py-3 px-4 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 border-2 border-slate-950">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>Escuchar Resumen</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DETALLE DE PRODUCTO -->
+        <div v-if="selectedProduct" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" @click.self="selectedProduct = null">
+            <div class="bg-slate-900 border-4 border-yellow-400 p-6 rounded-2xl max-w-xl w-full text-white shadow-2xl relative">
+                <button @click="selectedProduct = null" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-yellow-400 text-slate-950 flex items-center justify-center font-black text-2xl">
+                        <i :class="selectedProduct.icon"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-sena-green uppercase">{{ selectedProduct.categoria }}</span>
+                        <h3 class="text-xl font-black">{{ selectedProduct.nombre }}</h3>
+                    </div>
+                </div>
+
+                <p class="text-sm opacity-90 leading-relaxed mb-4">{{ selectedProduct.descripcion }}</p>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 mb-4">
+                    <div class="text-xs"><strong class="text-yellow-400">Requisito de Validación:</strong> {{ selectedProduct.requisito }}</div>
+                    <div class="text-xs"><strong class="text-sena-green">Aporte a Registro Calificado:</strong> Alto impacto en la evidencia de investigación aplicada para registro calificado de tecnólogos.</div>
+                </div>
+
+                <button @click="speakText('Producto: ' + selectedProduct.nombre + '. ' + selectedProduct.descripcion)" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 border border-slate-700">
+                    <i class="fa-solid fa-volume-high"></i> Leer Descripción
+                </button>
+            </div>
+        </div>
+
+        <!-- FOOTER INSTITUCIONAL ACCESIBLE -->
+        <footer class="bg-slate-950 text-white border-t-4 border-sena-green p-4 text-center text-xs">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+                <span><strong>SENA - Centro Textil y de Gestión Industrial</strong> | Sistema SENOVA 2026</span>
+                <span>Diseñado con Criterios de Accesibilidad Visual para Instructores (Sampieri & Guía SENA)</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- VUE 3 APPLICATION SCRIPT -->
+    <script>
+        const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
+
+        createApp({
+            setup() {
+                const theme = ref('light');
+                const fontScale = ref(1);
+                const isSpeaking = ref(false);
+                const currentTab = ref('roadmap');
+                const selectedProduct = ref(null);
+                const activeRoadmapNode = ref(null);
+                const roadmapSearch = ref('');
+                const roadmapContainer = ref(null);
+                const svgConnectors = ref([]);
+
+                // Estado persistente de nodos revisados en localStorage
+                const STORAGE_KEY = 'sena_roadmap_completed_nodes_v1';
+                const completedNodeIds = ref([]);
+
+                const loadCompletedNodes = () => {
+                    try {
+                        const saved = localStorage.getItem(STORAGE_KEY);
+                        if (saved) {
+                            completedNodeIds.value = JSON.parse(saved);
+                        } else {
+                            // Nodos iniciales marcados por defecto
+                            completedNodeIds.value = ['in_guias', 'in_fpp', 'core_process', 'fase_1', 'fase_2'];
+                        }
+                    } catch (e) {
+                        completedNodeIds.value = [];
+                    }
+                };
+
+                const saveCompletedNodes = () => {
+                    try {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(completedNodeIds.value));
+                    } catch (e) {
+                        console.warn('No se pudo guardar en localStorage', e);
+                    }
+                };
+
+                const isNodeDone = (id) => completedNodeIds.value.includes(id);
+
+                const toggleNodeDone = (id) => {
+                    if (isNodeDone(id)) {
+                        completedNodeIds.value = completedNodeIds.value.filter(item => item !== id);
+                    } else {
+                        completedNodeIds.value.push(id);
+                    }
+                    saveCompletedNodes();
+                };
+
+                const resetRoadmapProgress = () => {
+                    completedNodeIds.value = [];
+                    saveCompletedNodes();
+                };
+
+                // Base de Datos Completa de Nodos del Roadmap SENA
+                const roadmapNodes = ref([
+                    // ENTRADAS ITEMS
+                    {
+                        id: 'in_guias',
+                        group: 'entradas_items',
+                        categoryLabel: 'Entrada Pedagógica FPI',
+                        icon: 'fa-solid fa-book-open',
+                        title: 'Guías de Aprendizaje',
+                        subtitle: 'Orientaciones pedagógicas de formación',
+                        senaContext: 'Instrumento didáctico fundamental de la Formación Profesional Integral (FPI) en el Centro Textil y de Gestión Industrial. Orienta al aprendiz en actividades de reflexión inicial, contextualización, apropiación del conocimiento y transferencia en el ambiente de aprendizaje.',
+                        normativeBasis: 'Unidad Técnica del SENA y Lineamientos de Investigación Aplicada (SENA, 2014). Se articula con la Investigación como Estrategia Pedagógica (IEP) propuesta por Salamanca-Meneses & Hernández-Suárez (2018).',
+                        operationalSteps: [
+                            'Identificar un problema técnico o didáctico dentro del resultado de aprendizaje.',
+                            'Incorporar actividades de indagación guiada y recolección de datos en la fase de apropiación.',
+                            'Sistematizar los hallazgos de los aprendices como insumo para proyectos SENOVA.'
+                        ]
+                    },
+                    {
+                        id: 'in_fpp',
+                        group: 'entradas_items',
+                        categoryLabel: 'Estrategia Metodológica SENA',
+                        icon: 'fa-solid fa-diagram-nested',
+                        title: 'Formación por Proyectos',
+                        subtitle: 'Estrategia metodológica activa SENA',
+                        senaContext: 'Estrategia central del SENA que permite estructurar el currículo alrededor de problemas reales del sector textil, confección, diseño y gestión industrial, integrando teoría y práctica.',
+                        normativeBasis: 'Malagón Ruiz (2015) desde la Escuela Nacional de Instructores (ENI) plantea la FPI como campo de emergencias investigativas. Salamanca-Meneses & Hernández-Suárez (2018) respaldan el aprendizaje basado en indagación.',
+                        operationalSteps: [
+                            'Alinear el Proyecto Formativo de la ficha con una línea de investigación del Centro.',
+                            'Definir entregables técnicos verificables por trimestre.',
+                            'Documentar la evolución metodológica en la bitácora del instructor.'
+                        ]
+                    },
+                    {
+                        id: 'in_fichas',
+                        group: 'entradas_items',
+                        categoryLabel: 'Contextualización de Aprendices',
+                        icon: 'fa-solid fa-id-card',
+                        title: 'Fichas de Caracterización',
+                        subtitle: 'Contextualización del grupo de aprendices',
+                        senaContext: 'Diagnóstico socioeducativo y de estilos de aprendizaje aplicado al inicio de cada cohorte en el Centro Textil y sus subsedes para adaptar las mediaciones pedagógicas.',
+                        normativeBasis: 'Política de Bienestar al Aprendiz y enfoque cualitativo contextual de Hernández-Sampieri et al. (2014) para comprender el entorno natural de los participantes.',
+                        operationalSteps: [
+                            'Aplicar instrumento de caracterización al iniciar la etapa lectiva.',
+                            'Detectar habilidades previas en herramientas digitales, redacción técnica o análisis.',
+                            'Conformar semilleros de investigación con aprendices de alto interés indagativo.'
+                        ]
+                    },
+                    {
+                        id: 'in_diag',
+                        group: 'entradas_items',
+                        categoryLabel: 'Pertinencia Sectorial',
+                        icon: 'fa-solid fa-magnifying-glass',
+                        title: 'Diagnósticos Iniciales',
+                        subtitle: 'Identificación de problemas del sector textil',
+                        senaContext: 'Vigilancia tecnológica y lectura de necesidades de las empresas del sector textil, moda y manufactura para formular problemas pertinentes de investigación aplicada.',
+                        normativeBasis: 'Acuerdo 0003 de 2016 (SENOVA) y Mesas Sectoriales del SENA para pertinencia curricular.',
+                        operationalSteps: [
+                            'Consultar actas de Mesas Sectoriales y necesidades de empresas locales.',
+                            'Delimitar brechas tecnológicas o pedagógicas observables en taller.',
+                            'Registrar la idea de proyecto en el banco de iniciativas del Centro.'
+                        ]
+                    },
+                    // ENTRADAS HUB
+                    {
+                        id: 'hub_entradas',
+                        group: 'entradas_hub',
+                        categoryLabel: 'Pilar de Entrada del Proceso',
+                        icon: 'fa-solid fa-right-to-bracket',
+                        title: 'ENTRADAS: Herramientas Pedagógicas',
+                        subtitle: 'Insumos de aula FPI',
+                        senaContext: 'Conjunto de recursos didácticos y diagnósticos que el instructor (contratista o vinculado) moviliza diariamente en el ambiente de aprendizaje y que constituyen la materia prima de la investigación pedagógica.',
+                        normativeBasis: 'Lineamientos para la Investigación Aplicada en el SENA (2014) y Malagón Ruiz (2015).',
+                        operationalSteps: [
+                            'Articular guías, proyectos formativos y diagnósticos bajo una intención indagativa.',
+                            'Evitar que la práctica pedagógica quede sin sistematización escrita.',
+                            'Conectar las entradas con la pregunta problema del grupo o semillero.'
+                        ]
+                    },
+                    // CORE HUB
+                    {
+                        id: 'core_process',
+                        group: 'core_hub',
+                        categoryLabel: 'Núcleo Transformador',
+                        icon: 'fa-solid fa-microscope',
+                        title: 'CORE RESEARCH PROCESS',
+                        subtitle: 'Pregunta Cualitativa Central',
+                        senaContext: '¿De qué manera se configuran las vivencias y percepciones de los instructores (contratistas y vinculados) del Centro Textil y de Gestión Industrial ante las barreras normativas, metodológicas e institucionales que obstaculizan la promoción de la investigación pedagógica y la renovación de los registros calificados?',
+                        normativeBasis: 'Diseño cualitativo fenomenológico y de Teoría Fundamentada (Hernández-Sampieri et al., 2014; Creswell, 2013) articulado con estándares éticos MinCiencias (2018).',
+                        operationalSteps: [
+                            'Inmersión en el campo en el Centro Textil y subsedes.',
+                            'Entrevistas semiestructuradas y grupos focales con instructores OPS y de planta.',
+                            'Codificación abierta, axial y triangulación hacia productos SENOVA.'
+                        ]
+                    },
+                    // REGISTRO CALIFICADO HUB
+                    {
+                        id: 'hub_registro',
+                        group: 'registro_hub',
+                        categoryLabel: 'Impacto Institucional Crítico',
+                        icon: 'fa-solid fa-award',
+                        title: 'REGISTRO CALIFICADO (MEN)',
+                        subtitle: 'Condición de Calidad Investigación',
+                        senaContext: 'Autorización otorgada por el Ministerio de Educación Nacional para ofertar programas de nivel Tecnólogo en el SENA. La ausencia de productos investigativos sistematizados pone en riesgo la renovación de la oferta académica.',
+                        normativeBasis: 'Decreto 1330 de 2019 (MEN) y Acuerdo CESU 02 de 2020 sobre condiciones de calidad institucionales y de programa.',
+                        operationalSteps: [
+                            'Consolidar matriz de productos de investigación vinculados a cada programa tecnólogo.',
+                            'Verificar actualización de perfiles CvLAC de los instructores del programa.',
+                            'Entregar dossier de evidencias al equipo de Autoevaluación y Calidad del Centro.'
+                        ]
+                    },
+                    // SALIDAS HUB
+                    {
+                        id: 'hub_salidas',
+                        group: 'salidas_hub',
+                        categoryLabel: 'Pilar de Salida SENOVA',
+                        icon: 'fa-solid fa-right-from-bracket',
+                        title: 'SALIDAS: Productos SENOVA Formativos',
+                        subtitle: 'Evidencias tangibles y registrables',
+                        senaContext: 'Resultados concretos de nuevo conocimiento, desarrollo tecnológico y apropiación social derivados de los proyectos formativos y de investigación aplicada en el Centro Textil.',
+                        normativeBasis: 'Resolución 1-0105 de 2022 (SENA) y Modelo de Medición de Grupos e Investigadores de Minciencias.',
+                        operationalSteps: [
+                            'Validar el producto ante el Comité Técnico de Investigación del Centro.',
+                            'Gestionar registro de propiedad intelectual (DNDA o SIC) antes de divulgar.',
+                            'Registrar el producto en plataforma SIGP, CvLAC y GrupLAC.'
+                        ]
+                    },
+                    // SALIDAS ITEMS
+                    {
+                        id: 'out_software',
+                        group: 'salidas_items',
+                        categoryLabel: 'Desarrollo Tecnológico SENOVA',
+                        icon: 'fa-solid fa-code',
+                        title: 'Software / App Web',
+                        subtitle: 'Desarrollo Tecnológico -> DNDA + CvLAC',
+                        senaContext: 'Aplicativos web, plataformas de gestión pedagógica, simuladores textiles o herramientas de accesibilidad desarrolladas por instructores y aprendices.',
+                        normativeBasis: 'Resolución SENA 1-0105 de 2022 (titularidad institucional) y Ley 23 de 1982 sobre Derechos de Autor.',
+                        operationalSteps: [
+                            'Documentar código fuente, arquitectura y manual técnico/de usuario.',
+                            'Tramitar Registro de Soporte Lógico ante la Dirección Nacional de Derecho de Autor (DNDA).',
+                            'Ingresar número de certificado DNDA en CvLAC (sección Productos Tecnológicos) y vincular a GrupLAC.'
+                        ]
+                    },
+                    {
+                        id: 'out_articulo',
+                        group: 'salidas_items',
+                        categoryLabel: 'Generación de Nuevo Conocimiento',
+                        icon: 'fa-solid fa-file-contract',
+                        title: 'Artículo Científico',
+                        subtitle: 'Revistas indexadas / DOI + GrupLAC',
+                        senaContext: 'Manuscrito resultado de investigación cualitativa o aplicada publicado en revistas científicas (como Rutas de Formación de la ENI o revistas indexadas Publindex/Scopus).',
+                        normativeBasis: 'Criterios de calidad editorial Minciencias (categorías A1, A2, B, C) y normas APA 7.ª edición.',
+                        operationalSteps: [
+                            'Redactar artículo bajo estructura IMRyD con filiación institucional SENA - Centro Textil.',
+                            'Someter a evaluación por pares ciegos y obtener ISSN/DOI.',
+                            'Registrar en CvLAC y avalar en el GrupLAC del grupo del Centro.'
+                        ]
+                    },
+                    {
+                        id: 'out_manual',
+                        group: 'salidas_items',
+                        categoryLabel: 'Apropiación Social del Conocimiento',
+                        icon: 'fa-solid fa-book-bookmark',
+                        title: 'Manual Técnico',
+                        subtitle: 'Publicación institucional SENA / Depósito Legal',
+                        senaContext: 'Documento guía sobre operación de maquinaria textil, procesos de confección, control de calidad o metodologías pedagógicas aplicadas en talleres SENA.',
+                        normativeBasis: 'Lineamientos editoriales del Sistema de Bibliotecas SENA (SBS) y Ley 44 de 1993 (Depósito Legal).',
+                        operationalSteps: [
+                            'Estructurar contenido técnico con ilustraciones y protocolos estandarizados.',
+                            'Solicitar revisión de pares técnicos y trámite de ISBN / Depósito Legal.',
+                            'Publicar en el Repositorio Institucional SENA y reportar en CvLAC.'
+                        ]
+                    },
+                    {
+                        id: 'out_cartilla',
+                        group: 'salidas_items',
+                        categoryLabel: 'Apropiación Social del Conocimiento',
+                        icon: 'fa-solid fa-file-pdf',
+                        title: 'Ficha Técnica / Cartilla',
+                        subtitle: 'Validación comité técnico SENOVA',
+                        senaContext: 'Material didáctico condensado para transferencia directa a aprendices, instructores y unidades productivas del sector textil y de gestión industrial.',
+                        normativeBasis: 'Política de Apropiación Social del Conocimiento (Minciencias) y guías metodológicas SENOVA.',
+                        operationalSteps: [
+                            'Diseñar la cartilla o ficha con lenguaje accesible y enfoque práctico.',
+                            'Presentar ante el Comité de Investigación del Centro para acta de validación.',
+                            'Socializar en ambientes de aprendizaje y cargar evidencia en SIGP.'
+                        ]
+                    },
+                    {
+                        id: 'out_diseno',
+                        group: 'salidas_items',
+                        categoryLabel: 'Desarrollo Tecnológico Industrial',
+                        icon: 'fa-solid fa-compass-drafting',
+                        title: 'Diseño Industrial',
+                        subtitle: 'Registro ante la SIC (10 años de protección)',
+                        senaContext: 'Protección de la apariencia externa particular de un producto textil, mobiliario, empaque o dispositivo industrial (líneas, contornos, formas o texturas).',
+                        normativeBasis: 'Decisión 486 de 2000 de la Comunidad Andina y normativa de Nuevas Creaciones de la Superintendencia de Industria y Comercio (SIC).',
+                        operationalSteps: [
+                            'Realizar búsqueda de antecedentes en bases de datos SIC / DesignView.',
+                            'Preparar vistas técnicas (perspectiva, frontal, posterior, laterales, superior e inferior) y memoria descriptiva.',
+                            'Radicar en Sede Electrónica SIC con cesión de derechos al SENA y registrar resolución en CvLAC.'
+                        ]
+                    },
+                    // SALIDAS EXTRA
+                    {
+                        id: 'out_patente',
+                        group: 'salidas_extra',
+                        categoryLabel: 'Invención Tecnológica',
+                        icon: 'fa-solid fa-award',
+                        title: 'Patente',
+                        subtitle: 'Invención / Modelo Utilidad SIC',
+                        senaContext: 'Protección de invenciones técnicas o mejoras funcionales aplicables a maquinaria, procesos textiles o materiales innovadores desarrollados en el SENA.',
+                        normativeBasis: 'Decisión 486 de 2000 y Resolución SENA 1-0105 de 2022 sobre propiedad industrial.',
+                        operationalSteps: [
+                            'Evaluar novedad, nivel inventivo y aplicación industrial con gestor de Propiedad Intelectual SENA.',
+                            'Redactar documento técnico (reivindicaciones, descripción y dibujos).',
+                            'Radicar solicitud ante la SIC a nombre del SENA.'
+                        ]
+                    },
+                    {
+                        id: 'out_libro',
+                        group: 'salidas_extra',
+                        categoryLabel: 'Nuevo Conocimiento',
+                        icon: 'fa-solid fa-book',
+                        title: 'Libro',
+                        subtitle: 'ISBN y evaluación por pares',
+                        senaContext: 'Obra científica o pedagógica resultado de investigación concluida en el Centro Textil y de Gestión Industrial.',
+                        normativeBasis: 'Requisitos de Libros Resultado de Investigación de Minciencias (ISBN, evaluación externa y editorial reconocida).',
+                        operationalSteps: [
+                            'Someter manuscrito a evaluación de dos pares académicos externos.',
+                            'Tramitar ISBN ante la Cámara Colombiana del Libro vía editorial SENA.',
+                            'Registrar certificado de publicación y evaluación en CvLAC/GrupLAC.'
+                        ]
+                    },
+                    {
+                        id: 'out_revista',
+                        group: 'salidas_extra',
+                        categoryLabel: 'Divulgación Institucional',
+                        icon: 'fa-solid fa-newspaper',
+                        title: 'Revista',
+                        subtitle: 'Divulgación SENA / Boletines',
+                        senaContext: 'Publicaciones de divulgación tecnológica y experiencias pedagógicas significativas en medios institucionales del SENA.',
+                        normativeBasis: 'Estrategia de divulgación científica SENOVA y Sistema de Bibliotecas SENA.',
+                        operationalSteps: [
+                            'Sistematizar experiencia pedagógica o avance tecnológico.',
+                            'Postular a boletines regionales o revistas de divulgación SENA.',
+                            'Anexar constancia de publicación al portafolio del instructor.'
+                        ]
+                    },
+                    // NORMAS HUB & ITEMS
+                    {
+                        id: 'hub_normas',
+                        group: 'normas_hub',
+                        categoryLabel: 'Gobernanza Institucional',
+                        icon: 'fa-solid fa-landmark',
+                        title: 'SISTEMAS DE CONTROL NORMATIVO',
+                        subtitle: 'Marco legal SENA y MEN',
+                        senaContext: 'Conjunto de acuerdos, resoluciones y decretos nacionales que regulan la investigación aplicada, la propiedad intelectual y la calidad académica en el SENA.',
+                        normativeBasis: 'Jerarquía normativa articulada entre Presidencia/MEN y Consejo Directivo Nacional del SENA.',
+                        operationalSteps: [
+                            'Verificar cumplimiento normativo antes de formular proyectos SENOVA.',
+                            'Alinear metas contractuales de instructores con los lineamientos vigentes.',
+                            'Soportar autoevaluación de programas tecnólogos en estas normas.'
+                        ]
+                    },
+                    {
+                        id: 'norm_acuerdo',
+                        group: 'normas_items',
+                        categoryLabel: 'Normativa Interna SENA',
+                        icon: 'fa-solid fa-file-shield',
+                        title: 'Acuerdo 0003/2016',
+                        subtitle: 'Creación y reglamentación SENOVA',
+                        senaContext: 'Norma fundacional que organiza el Sistema de Investigación, Desarrollo Tecnológico e Innovación del SENA (SENOVA) y define sus líneas programáticas.',
+                        normativeBasis: 'Consejo Directivo Nacional del SENA (2016). Complementado por Lineamientos de Investigación Aplicada (SENA, 2014).',
+                        operationalSteps: [
+                            'Identificar la línea programática SENOVA aplicable al proyecto.',
+                            'Articular el proyecto con los semilleros y grupos del Centro Textil.',
+                            'Gestionar recursos a través de convocatorias internas SENOVA.'
+                        ]
+                    },
+                    {
+                        id: 'norm_res',
+                        group: 'normas_items',
+                        categoryLabel: 'Propiedad Intelectual SENA',
+                        icon: 'fa-solid fa-copyright',
+                        title: 'Res. 1-0105/2022',
+                        subtitle: 'Propiedad intelectual y gestión I+D+i',
+                        senaContext: 'Establece las directrices para la gestión de la investigación y la titularidad de derechos patrimoniales sobre obras y creaciones desarrolladas con recursos o tiempo SENA.',
+                        normativeBasis: 'Dirección General del SENA (2022). Regula cesión de derechos y reconocimiento moral a instructores y aprendices.',
+                        operationalSteps: [
+                            'Suscribir acuerdos de confidencialidad y cesión de derechos patrimoniales al iniciar el proyecto.',
+                            'Solicitar aval del Comité de Propiedad Intelectual antes de publicar.',
+                            'Reconocer crédito moral a todos los instructores y aprendices autores.'
+                        ]
+                    },
+                    {
+                        id: 'norm_dec',
+                        group: 'normas_items',
+                        categoryLabel: 'Normativa Educación Superior',
+                        icon: 'fa-solid fa-building-columns',
+                        title: 'Decreto 1330/2019 MEN',
+                        subtitle: 'Condiciones de calidad y Registro Calificado',
+                        senaContext: 'Exige que los programas tecnológicos demuestren cultura investigativa, recursos docentes adecuados y productos verificables para obtener o renovar su Registro Calificado.',
+                        normativeBasis: 'Ministerio de Educación Nacional [MEN] (2019), Decreto Único Reglamentario 1075 de 2015.',
+                        operationalSteps: [
+                            'Mapear la producción científica de instructores por cada programa tecnólogo.',
+                            'Evidenciar articulación entre investigación y currículo.',
+                            'Presentar evidencias consolidadas ante pares académicos del MEN.'
+                        ]
+                    },
+                    // GRUPLAC HUB & ITEMS
+                    {
+                        id: 'hub_gruplac',
+                        group: 'gruplac_hub',
+                        categoryLabel: 'Sistema Nacional ScienTI',
+                        icon: 'fa-solid fa-users-gear',
+                        title: 'CATÁLOGO DE PRODUCTOS (GrupLAC)',
+                        subtitle: 'Visibilidad Minciencias y Semilleros',
+                        senaContext: 'Plataforma oficial de Minciencias donde el Grupo de Investigación del Centro Textil consolida sus líneas, integrantes (CvLAC), semilleros y producción avalada.',
+                        normativeBasis: 'Modelo de Medición de Grupos de Investigación de Minciencias y aval institucional vía InstituLAC SENA.',
+                        operationalSteps: [
+                            'Actualizar hoja de vida individual en CvLAC (instructores y aprendices de semillero).',
+                            'Vincular integrantes al grupo en GrupLAC y aceptar aval en InstituLAC SENA.',
+                            'Importar productos validados (artículos, software, diseños) desde CvLAC hacia GrupLAC.'
+                        ]
+                    },
+                    {
+                        id: 'grup_art',
+                        group: 'gruplac_articulos',
+                        categoryLabel: 'Categorización Minciencias',
+                        icon: 'fa-solid fa-ranking-star',
+                        title: 'Tipos de Artículos (A1, A2, B, C)',
+                        subtitle: 'Indexación Publindex / Scopus / WoS',
+                        senaContext: 'Clasificación de la producción bibliográfica según el cuartil o índice de impacto de la revista donde publican los instructores investigadores.',
+                        normativeBasis: 'Índice Bibliográfico Nacional (Publindex - Minciencias) y criterios de calidad editorial.',
+                        operationalSteps: [
+                            'Seleccionar revistas indexadas acordes al área pedagógica o textil.',
+                            'Verificar homologación vigente en Publindex antes de someter.',
+                            'Cargar metadatos exactos (ISSN, volumen, páginas, DOI) en CvLAC.'
+                        ]
+                    },
+                    {
+                        id: 'grup_pi',
+                        group: 'gruplac_pi',
+                        categoryLabel: 'Protección Legal de Activos',
+                        icon: 'fa-solid fa-shield-halved',
+                        title: 'Propiedad Intelectual (DNDA / SIC)',
+                        subtitle: 'Titularidad SENA, cesión y certificados',
+                        senaContext: 'Gestión jurídica indispensable para que el software (DNDA), los diseños industriales y las patentes (SIC) sean reconocidos como productos válidos en GrupLAC.',
+                        normativeBasis: 'Resolución SENA 1-0105 de 2022, DNDA y Superintendencia de Industria y Comercio (SIC).',
+                        operationalSteps: [
+                            'Tramitar registro DNDA (software/obras) o SIC (diseños industriales/patentes).',
+                            'Verificar titularidad institucional a nombre del SENA.',
+                            'Ingresar número de registro oficial en CvLAC para validación en GrupLAC.'
+                        ]
+                    },
+                    // FASES DE INVESTIGACIÓN (7 NODOS SECUENCIALES)
+                    {
+                        id: 'fases_hub',
+                        group: 'fases_hub',
+                        categoryLabel: 'Estructura Metodológica SENA',
+                        icon: 'fa-solid fa-layer-group',
+                        title: 'FASES DE INVESTIGACIÓN (GUÍA SENA)',
+                        subtitle: 'Secuencia metodológica integral',
+                        senaContext: 'Ruta estructurada de 7 componentes obligatorios establecidos en la Guía para la Presentación de Proyectos de Investigación del SENA.',
+                        normativeBasis: 'Guía Institucional de Proyectos SENA y metodología cualitativa de Hernández-Sampieri et al. (2014).',
+                        operationalSteps: [
+                            'Desarrollar secuencialmente desde el título hasta la bibliografía APA 7.',
+                            'Verificar coherencia entre pregunta, objetivos y diseño cualitativo.',
+                            'Someter a revisión de pares internos antes de radicar en SIGP.'
+                        ]
+                    },
+                    {
+                        id: 'fase_1',
+                        group: 'fases_items',
+                        categoryLabel: 'Fase 1 de la Guía',
+                        icon: 'fa-solid fa-heading',
+                        title: 'Introduction',
+                        subtitle: 'Título y Resumen Ejecutivo',
+                        senaContext: 'Define el alcance temático (vivencias de instructores FPI ante barreras investigativas), el contexto (Centro Textil y GI) y la síntesis metodológica.',
+                        normativeBasis: 'Numeral 1 y 2 de la Guía SENA; criterios de claridad y delimitación de Hernández-Sampieri et al. (2014).',
+                        operationalSteps: [
+                            'Redactar título preciso con variables/categorías, población y lugar.',
+                            'Elaborar resumen estructurado (problema, metodología cualitativa e impacto).'
+                        ]
+                    },
+                    {
+                        id: 'fase_2',
+                        group: 'fases_items',
+                        categoryLabel: 'Fase 2 de la Guía',
+                        icon: 'fa-solid fa-circle-question',
+                        title: 'Problem',
+                        subtitle: 'Planteamiento, Pregunta y Justificación',
+                        senaContext: 'Expone las tensiones metodológicas, contractuales (OPS vs. planta) e institucionales que afectan la investigación pedagógica y los registros calificados.',
+                        normativeBasis: 'Numeral 3 de la Guía SENA; Malagón Ruiz (2015) y Lineamientos SENA (2014).',
+                        operationalSteps: [
+                            'Describir síntomas y causas en las 3 dimensiones (metodológica, contractual, institucional).',
+                            'Formular pregunta cualitativa abierta y justificar relevancia ante Decreto 1330.'
+                        ]
+                    },
+                    {
+                        id: 'fase_3',
+                        group: 'fases_items',
+                        categoryLabel: 'Fase 3 de la Guía',
+                        icon: 'fa-solid fa-sitemap',
+                        title: 'Conceptual',
+                        subtitle: 'Referente Teórico e IEP',
+                        senaContext: 'Articula las categorías de Investigación Pedagógica en FPI, Investigación como Estrategia Pedagógica (IEP), Barreras Contextuales y Calidad MEN.',
+                        normativeBasis: 'Numeral 4 de la Guía SENA; Salamanca-Meneses & Hernández-Suárez (2018) y Malagón Ruiz (2015).',
+                        operationalSteps: [
+                            'Construir mapa de relaciones categoriales.',
+                            'Definir conceptualmente cada categoría con citas APA 7.'
+                        ]
+                    },
+                    {
+                        id: 'fase_4',
+                        group: 'fases_items',
+                        categoryLabel: 'Fase 4 de la Guía',
+                        icon: 'fa-solid fa-bullseye',
+                        title: 'Objectives',
+                        subtitle: 'Objetivo General y Específicos',
+                        senaContext: 'Orienta la comprensión fenomenológica de las vivencias de instructores y la caracterización de rutas para productos SENOVA.',
+                        normativeBasis: 'Numeral 5 de la Guía SENA; taxonomía de verbos cualitativos (analizar, comprender, explorar, caracterizar).',
+                        operationalSteps: [
+                            'Alinear el Objetivo General directamente con la pregunta de investigación.',
+                            'Desglosar 4 objetivos específicos medibles y alcanzables.'
+                        ]
+                    },
+                    {
+                        id: 'fase_5',
+                        group: 'fases_items',
+                        categoryLabel: 'Fase 5 de la Guía',
+                        icon: 'fa-solid fa-flask',
+                        title: 'Methodology',
+                        subtitle: 'Diseño Cualitativo Hernández-Sampieri',
+                        senaContext: 'Enfoque cualitativo interpretativo (Fenomenología y Teoría Fundamentada) con entrevistas semiestructuradas, grupos focales, análisis documental y diario de campo.',
+                        normativeBasis: 'Numeral 6 de la Guía SENA; Hernández-Sampieri et al. (2014, Cap. 12), Creswell (2013) y MinCiencias (2018).',
+                        operationalSteps: [
+                            'Definir muestra intencional (instructores OPS, vinculados y líderes SENOVA).',
+                            'Aplicar consentimiento informado y codificación abierta/axial.'
+                        ]
+                    },
+                    {
+                        id: 'fase_6',
+                        group: 'fases_items',
+                        categoryLabel: 'Fase 6 de la Guía',
+                        icon: 'fa-solid fa-calendar-days',
+                        title: 'Cronograma',
+                        subtitle: 'Planificación en 12 Meses / 4 Fases',
+                        senaContext: 'Distribución temporal del proyecto desde la inmersión en el Centro Textil hasta la socialización de resultados y entrega de productos SENOVA.',
+                        normativeBasis: 'Numeral 7 de la Guía SENA; coherencia con calendarios académicos trimestrales del Centro.',
+                        operationalSteps: [
+                            'Programar Fase 1 (Mes 1-3), Fase 2 (Mes 2-7), Fase 3 (Mes 6-10) y Fase 4 (Mes 10-12).',
+                            'Establecer hitos de seguimiento mensual con el líder SENOVA.'
+                        ]
+                    },
+                    {
+                        id: 'fase_7',
+                        group: 'fases_items',
+                        categoryLabel: 'Fase 7 de la Guía',
+                        icon: 'fa-solid fa-book',
+                        title: 'Bibliography',
+                        subtitle: 'Referencias Normas APA 7.ª Ed.',
+                        senaContext: 'Soporte documental rigoroso que integra autores institucionales SENA, referentes metodológicos y normatividad vigente.',
+                        normativeBasis: 'Numeral 8 de la Guía SENA; Manual de Publicaciones de la American Psychological Association (7.ª ed.).',
+                        operationalSteps: [
+                            'Verificar correspondencia exacta entre citas en el texto y lista de referencias.',
+                            'Aplicar formato APA 7 con sangría francesa, orden alfabético y enlaces DOI/URL.'
+                        ]
+                    }
+                ]);
+
+                const roadmapNodesByGroup = (group) => {
+                    return roadmapNodes.value.filter(n => n.group === group);
+                };
+
+                const totalRoadmapNodes = computed(() => roadmapNodes.value.length);
+                const completedRoadmapCount = computed(() => completedNodeIds.value.length);
+                const roadmapProgress = computed(() => {
+                    if (totalRoadmapNodes.value === 0) return 0;
+                    return Math.round((completedRoadmapCount.value / totalRoadmapNodes.value) * 100);
+                });
+
+                const isNodeDimmed = (node) => {
+                    if (!roadmapSearch.value.trim()) return false;
+                    const q = roadmapSearch.value.toLowerCase();
+                    return !(
+                        node.title.toLowerCase().includes(q) ||
+                        node.subtitle.toLowerCase().includes(q) ||
+                        node.senaContext.toLowerCase().includes(q) ||
+                        node.normativeBasis.toLowerCase().includes(q)
+                    );
+                };
+
+                const openRoadmapNode = (node) => {
+                    activeRoadmapNode.value = node;
+                };
+
+                const speakNodeSummary = (node) => {
+                    const text = `${node.title}. ${node.subtitle}. Contexto SENA: ${node.senaContext}. Fundamento normativo: ${node.normativeBasis}`;
+                    speakText(text);
+                };
+
+                // Cálculo dinámico de líneas conectoras SVG entre nodos del Roadmap
+                const calculateSvgConnectors = () => {
+                    if (!roadmapContainer.value || currentTab.value !== 'roadmap') return;
+                    const containerRect = roadmapContainer.value.getBoundingClientRect();
+                    const scrollLeft = roadmapContainer.value.scrollLeft;
+
+                    const getBox = (id) => {
+                        const el = roadmapContainer.value.querySelector(`[data-node-id="${id}"]`);
+                        if (!el) return null;
+                        const r = el.getBoundingClientRect();
+                        return {
+                            left: r.left - containerRect.left + scrollLeft,
+                            right: r.right - containerRect.left + scrollLeft,
+                            top: r.top - containerRect.top,
+                            bottom: r.bottom - containerRect.top,
+                            cx: (r.left + r.right) / 2 - containerRect.left + scrollLeft,
+                            cy: (r.top + r.bottom) / 2 - containerRect.top
+                        };
+                    };
+
+                    const pairs = [
+                        // Entradas items -> Entradas Hub (punteadas)
+                        { from: 'in_guias', to: 'hub_entradas', dashed: true, side: 'r-l' },
+                        { from: 'in_fpp', to: 'hub_entradas', dashed: true, side: 'r-l' },
+                        { from: 'in_fichas', to: 'hub_entradas', dashed: true, side: 'r-l' },
+                        { from: 'in_diag', to: 'hub_entradas', dashed: true, side: 'r-l' },
+                        // Entradas Hub -> Core Process (sólida)
+                        { from: 'hub_entradas', to: 'core_process', dashed: false, side: 'r-l' },
+                        // Core Process -> Registro Calificado (sólida vertical)
+                        { from: 'core_process', to: 'hub_registro', dashed: false, side: 'b-t' },
+                        // Core Process -> Salidas Hub (sólida)
+                        { from: 'core_process', to: 'hub_salidas', dashed: false, side: 'r-l' },
+                        // Salidas Hub -> Productos SENOVA (punteadas)
+                        { from: 'hub_salidas', to: 'out_software', dashed: true, side: 'r-l' },
+                        { from: 'hub_salidas', to: 'out_articulo', dashed: true, side: 'r-l' },
+                        { from: 'hub_salidas', to: 'out_manual', dashed: true, side: 'r-l' },
+                        { from: 'hub_salidas', to: 'out_cartilla', dashed: true, side: 'r-l' },
+                        { from: 'hub_salidas', to: 'out_diseno', dashed: true, side: 'r-l' },
+                        // Diseño -> Extras (punteadas verticales)
+                        { from: 'out_diseno', to: 'out_patente', dashed: true, side: 'b-t' },
+                        { from: 'out_diseno', to: 'out_libro', dashed: true, side: 'b-t' },
+                        { from: 'out_diseno', to: 'out_revista', dashed: true, side: 'b-t' },
+                        // Registro Calificado -> Normas Hub & GrupLAC Hub (sólidas)
+                        { from: 'hub_registro', to: 'hub_normas', dashed: false, side: 'b-r' },
+                        { from: 'hub_registro', to: 'hub_gruplac', dashed: false, side: 'b-l' },
+                        // Normas Items -> Normas Hub (punteadas)
+                        { from: 'norm_acuerdo', to: 'hub_normas', dashed: true, side: 'r-l' },
+                        { from: 'norm_res', to: 'hub_normas', dashed: true, side: 'r-l' },
+                        { from: 'norm_dec', to: 'hub_normas', dashed: true, side: 'r-l' },
+                        // GrupLAC Hub -> Artículos & PI (punteadas)
+                        { from: 'hub_gruplac', to: 'grup_art', dashed: true, side: 'r-l' },
+                        { from: 'hub_gruplac', to: 'grup_pi', dashed: true, side: 'r-l' },
+                        // Registro Calificado -> Fases Hub (sólida vertical central)
+                        { from: 'hub_registro', to: 'fases_hub', dashed: false, side: 'b-t' },
+                        // Secuencia horizontal entre las 7 Fases (punteadas)
+                        { from: 'fase_1', to: 'fase_2', dashed: true, side: 'r-l' },
+                        { from: 'fase_2', to: 'fase_3', dashed: true, side: 'r-l' },
+                        { from: 'fase_3', to: 'fase_4', dashed: true, side: 'r-l' },
+                        { from: 'fase_4', to: 'fase_5', dashed: true, side: 'r-l' },
+                        { from: 'fase_5', to: 'fase_6', dashed: true, side: 'r-l' },
+                        { from: 'fase_6', to: 'fase_7', dashed: true, side: 'r-l' }
+                    ];
+
+                    const lines = [];
+                    pairs.forEach(p => {
+                        const a = getBox(p.from);
+                        const b = getBox(p.to);
+                        if (!a || !b) return;
+                        if (p.side === 'r-l') {
+                            lines.push({ x1: a.right, y1: a.cy, x2: b.left, y2: b.cy, dashed: p.dashed });
+                        } else if (p.side === 'b-t') {
+                            lines.push({ x1: a.cx, y1: a.bottom, x2: b.cx, y2: b.top, dashed: p.dashed });
+                        } else if (p.side === 'b-r') {
+                            lines.push({ x1: a.cx - 20, y1: a.bottom, x2: b.right, y2: b.cy, dashed: p.dashed });
+                        } else if (p.side === 'b-l') {
+                            lines.push({ x1: a.cx + 20, y1: a.bottom, x2: b.left, y2: b.cy, dashed: p.dashed });
+                        }
+                    });
+                    svgConnectors.value = lines;
+                };
+
+                onMounted(() => {
+                    loadCompletedNodes();
+                    nextTick(() => {
+                        setTimeout(calculateSvgConnectors, 150);
+                    });
+                    window.addEventListener('resize', calculateSvgConnectors);
+                });
+
+                watch([currentTab, fontScale, theme], () => {
+                    nextTick(() => {
+                        setTimeout(calculateSvgConnectors, 120);
+                    });
+                });
+
+                const preguntaCentralText = "¿De qué manera se configuran las vivencias y percepciones de los instructores contratistas y vinculados del Centro Textil y de Gestión Industrial ante las barreras normativas, metodológicas e institucionales que obstaculizan la promoción de la investigación pedagógica y la renovación de los registros calificados?";
+
+                const seccionesGuia = ref([
+                    { id: 'guia-1', tituloShort: 'Título' },
+                    { id: 'guia-2', tituloShort: 'Resumen' },
+                    { id: 'guia-3', tituloShort: 'Descripción' },
+                    { id: 'guia-4', tituloShort: 'Ref. Conceptual' },
+                    { id: 'guia-5', tituloShort: 'Objetivos' },
+                    { id: 'guia-6', tituloShort: 'Metodología' },
+                    { id: 'guia-7', tituloShort: 'Cronograma' },
+                    { id: 'guia-8', tituloShort: 'Bibliografía APA 7' }
+                ]);
+
+                const guiaData = ref({
+                    titulo: "Configuración de Vivencias y Percepciones de Instructores de la FPI Frente a las Barreras en la Investigación Pedagógica y su Impacto en el Registro Calificado: Estudio Cualitativo en el Centro Textil y de Gestión Industrial",
+                    resumen: "El presente proyecto de investigación aborda la problemática de la promoción de la investigación pedagógica en la Formación Profesional Integral (FPI) del SENA, enfocándose en el Centro Textil y de Gestión Industrial. Indaga en las barreras metodológicas, normativo-contractuales e institucionales que enfrentan instructores contratistas y vinculados. Analiza el impacto de estas restricciones en la autoevaluación y renovación de Registros Calificados ante el Ministerio de Educación Nacional (Decreto 1330 de 2019). Metodológicamente se enmarca en un enfoque cualitativo inductivo-interpretativo (Teoría Fundamentada / Fenomenología, Hernández-Sampieri et al., 2014) utilizando entrevistas, grupos focales y análisis documental para proyectar alternativas estratégicas.",
+                    planteamiento: "En el SENA, la FPI requiere la acreditación de condiciones de calidad para sus programas tecnológicos bajo el Decreto 1330 de 2019 (MEN). La investigación pedagógica es reconocida como un campo de posibilidades para la cualificación docente (Malagón Ruiz, 2015). Sin embargo, en el Centro Textil existen tensiones metodológicas (desconocimiento de investigación aplicada), contractuales (falta de horas formales en contratistas OPS) e institucionales (rotación en SENOVA) que limitan la producción científica y ponen en riesgo los registros calificados.",
+                    pregunta: "¿De qué manera se configuran las vivencias y percepciones de los instructores contratistas y vinculados del Centro Textil y de Gestión Industrial ante las barreras normativas, metodológicas e institucionales que obstaculizan la promoción de la investigación pedagógica y la renovación de los registros calificados?",
+                    justificacion: "El estudio se justifica por su pertinencia para el sector textil-industrial, su necesidad de cumplimiento normativo ante el MEN (2019) y su aporte al conocimiento sobre las condiciones laborales e investigativas del instructor. Promueve la Investigación como Estrategia Pedagógica (IEP) (Salamanca-Meneses & Hernández-Suárez, 2018) e integra estándares de ética e integridad científica (MinCiencias, 2018).",
+                    antecedentes: "Internacionalmente, UNESCO (2020) y CINTERFOR/OIT (2019) destacan la disociación entre cargas operativas y tiempo investigativo en educación técnica. Nivel nacional, Salamanca-Meneses y Hernández-Suárez (2018) probaron que la IEP fortalece competencias científicas, mientras Malagón Ruiz (2015) analiza la pedagogía SENA como campo emergente.",
+                    referenteConceptual: "Articula el marco normativo (Decreto 1330 MEN, Res. SENA 1-0105/2022) con las categorías de Investigación Pedagógica en FPI, Investigación como Estrategia Pedagógica (IEP), Barreras Contextuales y Aseguramiento de la Calidad.",
+                    objetivoGeneral: "Analizar y comprender la configuración de las vivencias, significados y percepciones de los instructores (contratistas y vinculados) del Centro Textil y de Gestión Industrial frente a las barreras normativas, metodológicas e institucionales que inciden en la promoción de la investigación pedagógica y en la renovación de registros calificados.",
+                    objetivosEspecificos: [
+                        "Identificar los vacíos conceptuales y metodológicos sobre la investigación aplicada y su articulación con la Formación por Proyectos.",
+                        "Explorar las implicaciones de las condiciones normativo-contractuales y la evaluación laboral en el compromiso investigativo.",
+                        "Describir el impacto de la rotación de liderazgos de SENOVA y la asignación de recursos en la producción científica.",
+                        "Caracterizar la apropiación de la ruta de producción, registro y visibilización de productos SENOVA/MinCiencias."
+                    ],
+                    metodologia: "Enfoque cualitativo interpretativo, inductivo y flexible (Hernández-Sampieri et al., 2014; Patton, 2002). Diseños articulados de Fenomenología y Teoría Fundamentada. Muestra no probabilística de instructores contratistas y de planta del Centro Textil. Recolección mediante entrevistas semiestructuradas, grupos focales, análisis documental y diario de campo. Codificación abierta/axial e integridad ética con consentimiento informado (MinCiencias, 2018)."
+                });
+
+                const cronogramaData = ref([
+                    { nombre: "Formalización de protocolo y ajustes", meses: [1] },
+                    { nombre: "Inmersión en el Centro Textil y subsedes", meses: [2, 3] },
+                    { nombre: "Aplicación de entrevistas semiestructuradas", meses: [4, 5, 6] },
+                    { nombre: "Desarrollo de grupos focales por área", meses: [5, 6, 7] },
+                    { nombre: "Análisis documental de Registros Calificados", meses: [2, 3, 4, 5, 6, 7] },
+                    { nombre: "Codificación abierta y axial de datos", meses: [6, 7, 8, 9] },
+                    { nombre: "Triangulación y síntesis categorial", meses: [9, 10] },
+                    { nombre: "Redacción de informe final y socialización", meses: [10, 11, 12] }
+                ]);
+
+                const bibliografiaData = ref([
+                    "CINTERFOR/OIT. (2019). La formación profesional y los retos del futuro del trabajo. OIT.",
+                    "Creswell, J. W. (2013). Qualitative inquiry and research design: Choosing among five approaches (3rd ed.). SAGE.",
+                    "Hernández-Sampieri, R., Fernández-Collado, C., & Baptista-Lucio, P. (2014). Metodología de la investigación (6.ª ed.). McGraw-Hill.",
+                    "Malagón Ruiz, R. Y. (2015). Investigación pedagógica: Un campo de emergencias y posibilidades. Rutas de Formación, (1), 20–25.",
+                    "Ministerio de Ciencia, Tecnología e Innovación [MinCiencias]. (2018). Política de ética de la investigación e integridad científica. MinCiencias.",
+                    "Ministerio de Educación Nacional [MEN]. (2019). Decreto 1330 de 2019: Registro calificado en Educación Superior. MEN.",
+                    "Salamanca-Meneses, X., & Hernández-Suárez, C. A. (2018). Enseñanza en ciencias: La investigación como estrategia pedagógica. Trilogía Ciencia Tecnología Sociedad, 10(19), 133–148.",
+                    "Servicio Nacional de Aprendizaje [SENA]. (2014). Lineamientos para la investigación aplicada en el SENA 2014. Dirección de Formación Profesional.",
+                    "Servicio Nacional de Aprendizaje [SENA]. (2022). Resolución 1-0105 de 2022: Orientaciones para la gestión de la investigación en el SENA. SENA."
+                ]);
+
+                const normatividad = ref([
+                    { id: 1, code: 'Acuerdo 0003/2016', title: 'Creación SENOVA', desc: 'Reglamenta el Sistema de Investigación, Desarrollo Tecnológico e Innovación del SENA.', impact: 'Soporte Normativo Base' },
+                    { id: 2, code: 'Res. 1-0105/2022', title: 'Propiedad Intelectual SENA', desc: 'Directrices para el registro y titularidad de productos desarrollados por instructores.', impact: 'Reconocimiento de Productos' },
+                    { id: 3, code: 'Decreto 1330/2019 MEN', title: 'Registro Calificado', desc: 'Exige evidencias comprobables de cultura investigativa en programas tecnológicos.', impact: 'Continuidad de Oferta Académica' }
+                ]);
+
+                const entradasProcess = ref([
+                    { id: 1, nombre: 'Guías de Aprendizaje', detalle: 'Orientaciones pedagógicas de formación', icon: 'fa-solid fa-book-open' },
+                    { id: 2, nombre: 'Formación por Proyectos', detalle: 'Estrategia metodológica activa', icon: 'fa-solid fa-diagram-nested' },
+                    { id: 3, nombre: 'Fichas de Caracterización', detalle: 'Contextualización del grupo de aprendices', icon: 'fa-solid fa-id-card' },
+                    { id: 4, nombre: 'Diagnósticos Iniciales', detalle: 'Identificación de problemas del sector textil', icon: 'fa-solid fa-magnifying-glass' },
+                    { id: 5, nombre: 'Plantillas de Recolección', detalle: 'Instrumentos cualitativos de aula', icon: 'fa-solid fa-file-lines' }
+                ]);
+
+                const productosList = ref([
+                    { id: 1, nombre: 'Software / App Web', categoria: 'Desarrollo Tecnológico', icon: 'fa-solid fa-code', descripcion: 'Sistemas ejecutables de soporte pedagógico o industrial desarrollados en la FPI.', requisito: 'Registro de Soporte Lógico en la DNDA.' },
+                    { id: 2, nombre: 'Artículo Científico', categoria: 'Generación Nuevo Conocimiento', icon: 'fa-solid fa-file-contract', descripcion: 'Publicación de resultados cualitativos en revista indexada o SENA.', requisito: 'Carta de aceptación o publicación con DOI.' },
+                    { id: 3, nombre: 'Manual Técnico', categoria: 'Apropiación Social', icon: 'fa-solid fa-book-bookmark', descripcion: 'Guía detallada de procedimientos operativos o pedagógicos.', requisito: 'Publicación institucional con Depósito Legal.' },
+                    { id: 4, nombre: 'Ficha Técnica / Cartilla', categoria: 'Apropiación Social', icon: 'fa-solid fa-file-pdf', descripcion: 'Documento condensado de especificaciones para uso formativo.', requisito: 'Validación por el comité técnico de investigación.' },
+                    { id: 5, nombre: 'Diseño Industrial', categoria: 'Desarrollo Tecnológico', icon: 'fa-solid fa-compass-drafting', descripcion: 'Modelado o prototipo textil/industrial registrado.', requisito: 'Registro de Diseño Industrial ante la SIC.' },
+                    { id: 6, nombre: 'Patente de Invención', categoria: 'Generación Nuevo Conocimiento', icon: 'fa-solid fa-award', descripcion: 'Creación técnica innovadora aplicable al sector industrial.', requisito: 'Solicitud formal radicada ante la SIC a nombre del SENA.' },
+                    { id: 7, nombre: 'Libro / Capítulo de Libro', categoria: 'Generación Nuevo Conocimiento', icon: 'fa-solid fa-book', descripcion: 'Obra completa o capítulo sobre investigación pedagógica.', requisito: 'ISBN otorgado y evaluación por pares ciegos.' },
+                    { id: 8, nombre: 'Revista / Divulgación', categoria: 'Apropiación Social', icon: 'fa-solid fa-newspaper', descripcion: 'Artículos de opinión y experiencias en medios institucionales.', requisito: 'Certificado de publicación registrado.' }
+                ]);
+
+                const resultadosEsperados = ref([
+                    { id: 1, codigo: 'RES-01', tipo: 'Generación de Conocimiento', titulo: 'Modelo Cualitativo de Diagnóstico de Barreras Investigativas', descripcion: 'Sistematización analítica de vivencias, tensiones contractuales y barreras metodológicas.', indicador: '1 Informe Científico de Investigación en revista indexada.', beneficiario: 'Instructores y Líderes SENOVA.', fuenteAPA: 'Hernández-Sampieri et al. (2014) & Malagón Ruiz (2015)' },
+                    { id: 2, codigo: 'RES-02', tipo: 'Desarrollo Técnico-Pedagógico', titulo: 'Guía Metodológica de Investigación como Estrategia Pedagógica (IEP)', descripcion: 'Protocolo práctico para integrar la IEP en las guías de aprendizaje del Centro Textil.', indicador: '1 Cartilla Pedagógica con depósito legal.', beneficiario: 'Instructores FPI y Coordinadores Académicos.', fuenteAPA: 'Salamanca-Meneses & Hernández-Suárez (2018)' },
+                    { id: 3, codigo: 'RES-03', tipo: 'Fortalecimiento Institucional', titulo: 'Dossier de Evidencias de Calidad para Registro Calificado (MEN)', descripcion: 'Compilación estructurada de productos para respaldar autoevaluación ante el MEN.', indicador: '100% de cumplimiento en la condición de investigación.', beneficiario: 'Subdirección de Centro y Equipo de Calidad MEN.', fuenteAPA: 'MEN Decreto 1330 (2019)' },
+                    { id: 4, codigo: 'RES-04', tipo: 'Apropiación Social y Ética', titulo: 'Ruta Institucional de Acompañamiento e Integridad Científica', descripcion: 'Propuesta de concertación horaria, asignación de responsabilidades y buenas prácticas.', indicador: '1 Protocolo de acompañamiento aprobado por el Comité Técnico.', beneficiario: 'Comunidad Educativa SENA y Contratistas OPS.', fuenteAPA: 'SENA (2014) & MinCiencias (2018)' }
+                ]);
+
+                const checklistSections = ref([
+                    {
+                        id: 's1',
+                        titulo: '1. Planteamiento del Problema de Investigación',
+                        items: [
+                            { id: 'c1', label: 'Síntesis del contexto teórico general', desc: 'Revisión preliminar del tema y su fundamentación.', completed: true },
+                            { id: 'c2', label: 'Estado actual del problema (Brechas)', desc: 'Identificación clara de deficiencias de conocimiento.', completed: true },
+                            { id: 'c3', label: 'Justificación del aporte', desc: 'Explicación del impacto en la FPI y registros calificados.', completed: true }
+                        ]
+                    },
+                    {
+                        id: 's2',
+                        titulo: '2. Formulación y Pregunta Central',
+                        items: [
+                            { id: 'c4', label: 'Pregunta de investigación cualitativa', desc: 'Formulación abierta, orientada a vivencias e instructores.', completed: true },
+                            { id: 'c5', label: 'Delimitación de población y contexto', desc: 'Centro Textil y de Gestión Industrial (subsedes).', completed: true }
+                        ]
+                    },
+                    {
+                        id: 's3',
+                        titulo: '3. Justificación y Antecedentes APA 7',
+                        items: [
+                            { id: 'c6', label: 'Pertinencia y necesidades del país/sector', desc: 'Impacto directo en la calidad de la formación.', completed: true },
+                            { id: 'c7', label: 'Antecedentes investigativos norma APA 7.ª ed.', desc: 'Estudios sobre IEP, pedagogía SENA y Registro Calificado MEN.', completed: true }
+                        ]
+                    },
+                    {
+                        id: 's4',
+                        titulo: '4. Referente Conceptual y Objetivos',
+                        items: [
+                            { id: 'c8', label: 'Mapa de relaciones conceptuales', desc: 'Diagrama o mapa con categorías emergentes.', completed: true },
+                            { id: 'c9', label: 'Objetivo General articulado', desc: 'Verbo en infinitivo de exploración/comprensión.', completed: true },
+                            { id: 'c10', label: 'Objetivos Específicos alcanzables', desc: 'Desglose en dimensiones metodológica, normativa e institucional.', completed: true }
+                        ]
+                    },
+                    {
+                        id: 's5',
+                        titulo: '5. Metodología Propuesta y Cronograma',
+                        items: [
+                            { id: 'c11', label: 'Enfoque cualitativo e inmersión', desc: 'Diseño fenomenológico / teoría fundamentada.', completed: true },
+                            { id: 'c12', label: 'Técnicas e instrumentos cualitativos', desc: 'Entrevistas a profundidad y revisión documental.', completed: true },
+                            { id: 'c13', label: 'Cronograma de actividades ordenado (12 meses)', desc: 'Tiempos de ejecución en meses.', completed: true }
+                        ]
+                    }
+                ]);
+
+                const checklistCompletion = computed(() => {
+                    let totalItems = 0;
+                    let completedItems = 0;
+                    checklistSections.value.forEach(section => {
+                        section.items.forEach(item => {
+                            totalItems++;
+                            if (item.completed) completedItems++;
+                        });
+                    });
+                    return Math.round((completedItems / totalItems) * 100);
+                });
+
+                const sectionProgress = (section) => {
+                    const total = section.items.length;
+                    const done = section.items.filter(i => i.completed).length;
+                    return Math.round((done / total) * 100);
+                };
+
+                const projectStatusText = computed(() => {
+                    if (checklistCompletion.value >= 90) return 'Propuesta de Alta Congruencia (100%)';
+                    if (checklistCompletion.value >= 60) return 'Propuesta en Estructuración Moderada';
+                    return 'Propuesta Incompleta / Riesgo Metodológico';
+                });
+
+                const projectStatusDetail = computed(() => {
+                    if (checklistCompletion.value >= 90) return 'El proyecto cumple con los 8 numerales de la Guía Institucional, soporte APA 7 y diseño cualitativo.';
+                    return 'Faltan secciones por completar en la metodología o antecedentes.';
+                });
+
+                const statusIcon = computed(() => {
+                    if (checklistCompletion.value >= 90) return 'fa-solid fa-circle-check text-sena-green';
+                    if (checklistCompletion.value >= 60) return 'fa-solid fa-triangle-exclamation text-yellow-400';
+                    return 'fa-solid fa-circle-xmark text-red-500';
+                });
+
+                const riskLevelText = computed(() => {
+                    if (checklistCompletion.value >= 85) return 'BAJO RIESGO DE SANCIÓN';
+                    if (checklistCompletion.value >= 50) return 'RIESGO MODERADO';
+                    return 'ALTO RIESGO REGISTRO CALIFICADO';
+                });
+
+                const riskBadgeClass = computed(() => {
+                    if (checklistCompletion.value >= 85) return 'bg-sena-green text-slate-950 font-extrabold';
+                    if (checklistCompletion.value >= 50) return 'bg-yellow-400 text-slate-950 font-extrabold';
+                    return 'bg-red-600 text-white font-extrabold';
+                });
+
+                const riskDetailText = computed(() => {
+                    if (checklistCompletion.value >= 85) return 'Evidencias suficientes para respaldar la condición de investigación ante el MEN (Decreto 1330).';
+                    return 'Se requiere documentar más productos para evitar objeciones del MEN.';
+                });
+
+                const recommendationText = computed(() => {
+                    if (checklistCompletion.value >= 85) return 'La propuesta está metodológicamente blindada y lista para radicación institucional en SENOVA.';
+                    return 'Complete los antecedentes y la definición de instrumentos cualitativos.';
+                });
+
+                const documentoCompletoText = computed(() => {
+                    return `Guía de Investigación SENA. Título: ${guiaData.value.titulo}. Resumen: ${guiaData.value.resumen}. Pregunta central: ${guiaData.value.pregunta}`;
+                });
+
+                const setTheme = (newTheme) => { theme.value = newTheme; };
+                const setFontScale = (scale) => { fontScale.value = scale; };
+
+                const themeClass = computed(() => {
+                    if (theme.value === 'yellow') return 'contrast-yellow';
+                    if (theme.value === 'light') return 'contrast-light';
+                    return 'contrast-dark bg-slate-950 text-slate-100';
+                });
+
+                const fontScaleClass = computed(() => {
+                    if (fontScale.value === 2) return 'text-scale-2';
+                    if (fontScale.value === 3) return 'text-scale-3';
+                    return 'text-scale-1';
+                });
+
+                const speakText = (text) => {
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                        if (isSpeaking.value) {
+                            isSpeaking.value = false;
+                            return;
+                        }
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'es-ES';
+                        utterance.rate = 0.95;
+                        utterance.onend = () => { isSpeaking.value = false; };
+                        utterance.onerror = () => { isSpeaking.value = false; };
+                        isSpeaking.value = true;
+                        window.speechSynthesis.speak(utterance);
+                    } else {
+                        alert("Su navegador no soporta lectura por voz integrada.");
+                    }
+                };
+
+                const toggleSpeechSynthesis = () => {
+                    if (isSpeaking.value) {
+                        window.speechSynthesis.cancel();
+                        isSpeaking.value = false;
+                    } else {
+                        speakText(documentoCompletoText.value);
+                    }
+                };
+
+                const scrollToSection = (secId) => {
+                    const el = document.getElementById(secId);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                };
+
+                const selectProduct = (prod) => { selectedProduct.value = prod; };
+
+                return {
+                    theme,
+                    fontScale,
+                    isSpeaking,
+                    currentTab,
+                    selectedProduct,
+                    activeRoadmapNode,
+                    roadmapSearch,
+                    roadmapContainer,
+                    svgConnectors,
+                    roadmapNodesByGroup,
+                    totalRoadmapNodes,
+                    completedRoadmapCount,
+                    roadmapProgress,
+                    isNodeDone,
+                    toggleNodeDone,
+                    resetRoadmapProgress,
+                    isNodeDimmed,
+                    openRoadmapNode,
+                    speakNodeSummary,
+                    preguntaCentralText,
+                    seccionesGuia,
+                    guiaData,
+                    cronogramaData,
+                    bibliografiaData,
+                    normatividad,
+                    entradasProcess,
+                    productosList,
+                    resultadosEsperados,
+                    checklistSections,
+                    checklistCompletion,
+                    sectionProgress,
+                    projectStatusText,
+                    projectStatusDetail,
+                    statusIcon,
+                    riskLevelText,
+                    riskBadgeClass,
+                    riskDetailText,
+                    recommendationText,
+                    documentoCompletoText,
+                    setTheme,
+                    setFontScale,
+                    themeClass,
+                    fontScaleClass,
+                    speakText,
+                    toggleSpeechSynthesis,
+                    scrollToSection,
+                    selectProduct
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
